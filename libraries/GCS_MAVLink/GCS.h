@@ -166,7 +166,7 @@ public:
 
     // mission item index to be sent on queued msg, delayed or not
     uint16_t mission_item_reached_index = AP_MISSION_CMD_INDEX_NONE;
-
+    uint8_t send_v2_extension_index ;
     // common send functions
     void send_heartbeat(void) const;
     void send_meminfo(void);
@@ -177,6 +177,7 @@ public:
     void send_distance_sensor() const;
     // send_rangefinder sends only if a downward-facing instance is
     // found.  Rover overrides this!
+    void send_v2_extension() ;
     virtual void send_rangefinder() const;
     void send_proximity() const;
     virtual void send_nav_controller_output() const = 0;
@@ -446,7 +447,7 @@ protected:
     void manual_override(RC_Channel *c, int16_t value_in, uint16_t offset, float scaler, const uint32_t tnow, bool reversed = false);
 
 private:
-
+     mavlink_v2_extension_t mavlink_v2_extension;
     void log_mavlink_stats();
 
     MAV_RESULT _set_mode_common(const MAV_MODE base_mode, const uint32_t custom_mode);

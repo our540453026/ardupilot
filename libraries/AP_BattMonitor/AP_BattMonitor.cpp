@@ -8,7 +8,7 @@
 #include "AP_BattMonitor_Sum.h"
 #include "AP_BattMonitor_FuelFlow.h"
 #include "AP_BattMonitor_FuelLevel_PWM.h"
-
+#include "AP_BattMonitor_BMS.h"
 #include <AP_HAL/AP_HAL.h>
 
 #if HAL_WITH_UAVCAN
@@ -113,6 +113,9 @@ AP_BattMonitor::init()
             case AP_BattMonitor_Params::BattMonitor_TYPE_ANALOG_VOLTAGE_ONLY:
             case AP_BattMonitor_Params::BattMonitor_TYPE_ANALOG_VOLTAGE_AND_CURRENT:
                 drivers[instance] = new AP_BattMonitor_Analog(*this, state[instance], _params[instance]);
+                break;
+            case AP_BattMonitor_Params::BattMonitor_TYPE_BMS:
+                drivers[instance] = new AP_BattMonitor_BMS(*this, state[instance], _params[instance]);
                 break;
 #if HAL_BATTMON_SMBUS_ENABLE
             case AP_BattMonitor_Params::BattMonitor_TYPE_SOLO:

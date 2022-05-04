@@ -61,7 +61,7 @@ public:
         DEVTYPE_RM3100 = 0x11,
     };
 
-
+    virtual void handle_serial(int16_t mag_x,int16_t mag_y,int16_t mag_z) {}
 protected:
 
     /*

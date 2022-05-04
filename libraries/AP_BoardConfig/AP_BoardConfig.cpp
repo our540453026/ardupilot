@@ -288,7 +288,7 @@ const AP_Param::GroupInfo AP_BoardConfig::var_info[] = {
     // @User: Advanced
     // @RebootRequired: True
     AP_GROUPINFO("ALT_CONFIG", 22, AP_BoardConfig, _alt_config, 0),
-    
+    AP_GROUPINFO("SD_FORMAT",  23, AP_BoardConfig, _sdcard_format,  0),
     AP_GROUPEND
 };
 

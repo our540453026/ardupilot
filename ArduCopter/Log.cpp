@@ -116,7 +116,32 @@ void Copter::Log_Write_MotBatt()
     logger.WriteBlock(&pkt_mot, sizeof(pkt_mot));
 #endif
 }
+struct PACKED log_MotBattBMS {
+    LOG_PACKET_HEADER;
+    uint64_t time_us;
+    uint32_t id;
+    int8_t   temp_pcb;          // pcb of the last received temperature message
+    uint16_t consumed;              // total current draw in milliamp hours since start-up
+    uint16_t V11;            //cell of vot
+    uint16_t V12;
+};
 
+// Write an rate packet
+void Copter::Log_Write_MotBattBMS()
+{
+#if FRAME_CONFIG != HELI_FRAME
+    struct log_MotBattBMS pkt_mot = {
+        LOG_PACKET_HEADER_INIT(LOG_MOTBATTBMS_MSG),
+        time_us         : AP_HAL::micros64(),
+        id        : serial_concentrator.bms_state.id,
+        temp_pcb        : serial_concentrator.bms_state.bat_temp1,
+        consumed    : serial_concentrator.bms_state.capacity_remaining,
+        V11     : serial_concentrator.bms_state.cell_vot[10],
+        V12     : serial_concentrator.bms_state.cell_vot[11]
+    };
+    logger.WriteBlock(&pkt_mot, sizeof(pkt_mot));
+#endif
+}
 // Wrote an event packet
 void Copter::Log_Write_Event(Log_Event id)
 {
@@ -465,6 +490,8 @@ const struct LogStructure Copter::log_structure[] = {
       "CTUN", "Qffffffefffhhf", "TimeUS,ThI,ABst,ThO,ThH,DAlt,Alt,BAlt,DSAlt,SAlt,TAlt,DCRt,CRt,N", "s----mmmmmmnnz", "F----00B000BB-" },
     { LOG_MOTBATT_MSG, sizeof(log_MotBatt),
       "MOTB", "Qffff",  "TimeUS,LiftMax,BatVolt,BatRes,ThLimit", "s-vw-", "F-00-" },
+    { LOG_MOTBATTBMS_MSG, sizeof(log_MotBattBMS),
+      "BMS", "QIbHHH",  "TimeUS,id,temp_pcb,consumed,V11,V12", "s-O-vv", "F-----" },  
     { LOG_DATA_INT16_MSG, sizeof(log_Data_Int16t),         
       "D16",   "QBh",         "TimeUS,Id,Value", "s--", "F--" },
     { LOG_DATA_UINT16_MSG, sizeof(log_Data_UInt16t),         
@@ -512,6 +539,7 @@ void Copter::Log_Write_Performance() {}
 void Copter::Log_Write_Attitude(void) {}
 void Copter::Log_Write_EKF_POS() {}
 void Copter::Log_Write_MotBatt() {}
+void Copter::Log_Write_MotBattBMS() {}
 void Copter::Log_Write_Event(Log_Event id) {}
 void Copter::Log_Write_Data(uint8_t id, int32_t value) {}
 void Copter::Log_Write_Data(uint8_t id, uint32_t value) {}

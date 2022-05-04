@@ -67,7 +67,8 @@
 #include <AP_TempCalibration/AP_TempCalibration.h>
 #include <AC_AutoTune/AC_AutoTune.h>
 #include <AP_Common/AP_FWVersion.h>
-
+#include <AP_SerialConcentrator/AP_SerialConcentrator.h>     // Battery monitor library
+#include <AP_SerialConcentrator/AP_SerialCompass.h>
 // Configuration
 #include "defines.h"
 #include "config.h"
@@ -242,7 +243,8 @@ public:
     // HAL::Callbacks implementation.
     void setup() override;
     void loop() override;
-
+    AP_SerialConcentrator serial_concentrator;
+    AP_SerialCompass serial_compass;
 private:
     static const AP_FWVersion fwver;
 
@@ -784,6 +786,7 @@ private:
     void Log_Write_Attitude();
     void Log_Write_EKF_POS();
     void Log_Write_MotBatt();
+    void Log_Write_MotBattBMS();
     void Log_Write_Event(Log_Event id);
     void Log_Write_Data(uint8_t id, int32_t value);
     void Log_Write_Data(uint8_t id, uint32_t value);

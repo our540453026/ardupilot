@@ -56,7 +56,7 @@ private:
     
     uint8_t _init_blob_index = 0;
     uint32_t _init_blob_time = 0;
-    static const char* const _initialisation_blob[6];
+    static const char* const _initialisation_blob[7];
    
     uint32_t crc_error_counter = 0;
     uint32_t last_injected_data_ms = 0;
@@ -130,7 +130,25 @@ private:
         uint8_t galbeisigmask;
         uint8_t gpsglosigmask;
     };
-
+    struct PACKED heading3a
+        {
+            uint32_t solstat;      ///< Solution status
+            uint32_t postype;      ///< Position type
+            float length;            ///<
+            float heading;            ///< 0~360 (deg)
+            float pitch;            ///< ��90��
+            float reserved;      ///<
+            float hdg_std;      ///<
+            float ptch_std;         ///
+            uint8_t stnid[4];      ///< base station id
+            uint8_t svs;         ///<
+            uint8_t obs;         ///
+            uint8_t multi;    ///< number of satellites tracked
+            uint8_t sol_source;       ///< number of satellites used in solution
+            uint8_t ext_sol_stat;         ///< number of GPS plus GLONASS L1 satellites used in solution
+            uint8_t galieo_beiduo_mask;   ///< number of GPS plus GLONASS L2 satellites used in solution
+            uint8_t gps_glonass_mask;          ///< reserved
+        };
     struct PACKED bestvel
     {
         uint32_t solstat;
@@ -148,6 +166,7 @@ private:
         bestvel bestvelu;
         bestpos bestposu;
         psrdop psrdopu;
+        heading3a heading3au;
         uint8_t bytes[256];
     };
     

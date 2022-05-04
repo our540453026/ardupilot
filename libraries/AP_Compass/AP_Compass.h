@@ -343,7 +343,7 @@ public:
      */
     MAV_RESULT mag_cal_fixed_yaw(float yaw_deg, uint8_t compass_mask,
                                  float lat_deg, float lon_deg);
-
+    void handle_serial(int16_t mag_x,int16_t mag_y,int16_t mag_z);
 private:
     static Compass *_singleton;
 
@@ -414,6 +414,10 @@ private:
         DRIVER_MAG3110  =14,
         DRIVER_IST8308  = 15,
 		DRIVER_RM3100   =16,
+        DRIVER_MSP      =17,
+        DRIVER_SERIAL   =18,
+        DRIVER_MMC5XX3  =19,
+        DRIVER_SERIAL1  =20,
     };
 
     bool _driver_enabled(enum DriverType driver_type);

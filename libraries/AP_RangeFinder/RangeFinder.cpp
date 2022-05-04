@@ -45,7 +45,7 @@
 #include <AP_Logger/AP_Logger.h>
 #include <AP_SerialManager/AP_SerialManager.h>
 #include <AP_Vehicle/AP_Vehicle_Type.h>
-
+#include "AP_RangeFinder_MR72.h"
 extern const AP_HAL::HAL &hal;
 
 // table of user settable parameters
@@ -492,6 +492,11 @@ void RangeFinder::detect_instance(uint8_t instance, uint8_t& serial_instance)
             drivers[instance] = new AP_RangeFinder_Lanbao(state[instance], params[instance], serial_instance++);
         }
         break;
+    case RangeFinder_TYPE_MR72:
+        if (AP_RangeFinder_Benewake::detect(serial_instance)) {
+            drivers[instance] = new AP_RangeFinder_MR72(state[instance], params[instance], serial_instance++);
+        }
+        break;  
     default:
         break;
     }
