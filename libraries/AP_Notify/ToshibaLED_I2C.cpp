@@ -23,7 +23,7 @@
 #include <utility>
 
 #include <AP_HAL/AP_HAL.h>
-
+//#include <../ArduCopter/Copter.h>
 extern const AP_HAL::HAL& hal;
 
 #define TOSHIBA_LED_BRIGHT  0xFF    // full brightness
@@ -46,6 +46,7 @@ ToshibaLED_I2C::ToshibaLED_I2C(uint8_t bus)
 
 bool ToshibaLED_I2C::hw_init(void)
 {
+    //gcs().send_text(MAV_SEVERITY_INFO,"tosled1");
     // first look for led on external bus
     _dev = std::move(hal.i2c_mgr->get_device(_bus, TOSHIBA_LED_I2C_ADDR));
     if (!_dev) {
@@ -60,7 +61,7 @@ bool ToshibaLED_I2C::hw_init(void)
     if (!ret) {
         return false;
     }
-
+    //gcs().send_text(MAV_SEVERITY_INFO,"tosled2");
     // update the red, green and blue values to zero
     uint8_t val[4] = { TOSHIBA_LED_PWM0, _led_off, _led_off, _led_off };
     ret = _dev->transfer(val, sizeof(val), nullptr, 0);
@@ -88,7 +89,7 @@ void ToshibaLED_I2C::_timer(void)
         return;
     }
     _need_update = false;
-
+    //gcs().send_text(MAV_SEVERITY_INFO,"tosled3");
     /* 4-bit for each color */
     uint8_t val[4] = { TOSHIBA_LED_PWM0, (uint8_t)(rgb.b >> 4),
                        (uint8_t)(rgb.g / 16), (uint8_t)(rgb.r / 16) };

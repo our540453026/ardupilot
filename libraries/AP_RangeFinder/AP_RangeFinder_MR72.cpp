@@ -119,7 +119,7 @@ void AP_RangeFinder_MR72::update(void)
 {
     if (get_reading(state.distance_cm)) {
         SendHz++;
-        if(SendHz >=10)
+        if(SendHz >=100)
         {
             SendHz = 0;
             gcs().send_text(MAV_SEVERITY_INFO,"sec1=%d,sec2=%d,sec3=%d",swapInt16(data_msg.data.three_sec.sector_1),state.distance_cm,swapInt16(data_msg.data.three_sec.sector_3));

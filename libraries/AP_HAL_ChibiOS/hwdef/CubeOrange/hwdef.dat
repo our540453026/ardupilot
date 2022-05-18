@@ -55,7 +55,7 @@ PA8 VDD_5V_PERIPH_EN OUTPUT LOW
 
 # This is the pin that senses USB being connected. It is an input pin
 # setup as OPENDRAIN.
-PA9 VBUS INPUT OPENDRAIN
+   VBUS INPUT OPENDRAIN
 
 # Now we define the pins that USB is connected on.
 PA11 OTG_FS_DM OTG1

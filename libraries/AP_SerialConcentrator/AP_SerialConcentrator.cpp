@@ -34,10 +34,10 @@ AP_SerialConcentrator::AP_SerialConcentrator()
 {
    _port = NULL;
    bms_state.cycle = 0;
-   //if (_singleton != nullptr) {
-       //    AP_HAL::panic("AP_SerialConcentrator must be singleton");
-       //}
-       //_singleton = this;
+   if (_singleton != nullptr) {
+           AP_HAL::panic("AP_SerialConcentrator must be singleton");
+       }
+       _singleton = this;
    link_init();
 }
 

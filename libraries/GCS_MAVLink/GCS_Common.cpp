@@ -385,7 +385,7 @@ void GCS_MAVLINK::send_proximity() const
 }
 void GCS_MAVLINK::send_v2_extension()
 {
-    //gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_extension=0");
+    //gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_extension0");
     uint8_t dat;
     AP_SerialConcentrator *serialConcentrator = AP_SerialConcentrator::get_singleton();
     if (serialConcentrator == nullptr) {
@@ -411,7 +411,7 @@ void GCS_MAVLINK::send_v2_extension()
         send_v2_extension_index = 1;
         serialConcentrator->Tx_urgent_statue = false;
     }
-    //gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_extension=%d",send_v2_extension_index);
+    //gcs().send_text(MAV_SEVERITY_INFO,"v2_extension=%d",send_v2_extension_index);
 }
 // report AHRS2 state
 void GCS_MAVLINK::send_ahrs2()

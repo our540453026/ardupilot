@@ -48,7 +48,7 @@ void Copter::userhook_SuperSlowLoop()
     float yaw1 = 0.0;
     float accel = 0.0;
     gps.gps_yaw_deg(yaw1,accel);
-    gcs().send_text(MAV_SEVERITY_INFO,"yaw0=%f,%f",yaw1,accel);
+    gcs().send_text(MAV_SEVERITY_INFO,"yaw=%.1f,%.1f",yaw1,accel);
     // put your 1Hz code here
     Log_Write_MotBattBMS();
 }

@@ -36,6 +36,7 @@
 #include <stdio.h>
 #include "AP_BoardLED2.h"
 #include "ProfiLED.h"
+#include "PCA9632LED_I2C.h"
 
 extern const AP_HAL::HAL& hal;
 
@@ -265,7 +266,8 @@ void AP_Notify::add_backends(void)
                 break;
 #endif
             case Notify_LED_PCA9685LED_I2C_External:
-                ADD_BACKEND(new PCA9685LED_I2C());
+                //ADD_BACKEND(new PCA9685LED_I2C());
+                ADD_BACKEND(new PCA9632LED_I2C());
                 break;
             case Notify_LED_NeoPixel:
                 ADD_BACKEND(new NeoPixel());

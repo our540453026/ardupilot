@@ -20,7 +20,7 @@
 #include <AP_HAL/AP_HAL.h>
 
 #include "AP_Notify.h"
-
+//#include <../ArduCopter/Copter.h>
 #ifndef HAL_BUZZER_ON
   #if !defined(HAL_BUZZER_PIN)
     #define HAL_BUZZER_ON (pNotify->get_buzz_level())
@@ -112,6 +112,7 @@ void Buzzer::update_pattern_to_play()
     // if battery failsafe constantly single buzz
     if (AP_Notify::flags.failsafe_battery) {
         play_pattern(SINGLE_BUZZ);
+        //gcs().send_text(MAV_SEVERITY_INFO,"buz1");
         return;
     }
 }
