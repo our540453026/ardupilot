@@ -26,6 +26,8 @@ void Copter::userhook_50Hz()
 void Copter::userhook_MediumLoop()
 {
     // put your 10Hz code here
+      serial_concentrator.update();
+      serial_compass.update();
 }
 #endif
 
@@ -33,6 +35,9 @@ void Copter::userhook_MediumLoop()
 void Copter::userhook_SlowLoop()
 {
     // put your 3.3Hz code here
+    serial_compass.update();
+     serial_concentrator.update();
+    //Log_Write_MotBattBMS();
 }
 #endif
 
@@ -40,6 +45,11 @@ void Copter::userhook_SlowLoop()
 void Copter::userhook_SuperSlowLoop()
 {
     // put your 1Hz code here
+    float yaw1 = 0.0;
+    float accel = 0.0;
+    uint32_t t;
+    gps.gps_yaw_deg(yaw1,accel,t);
+    gcs().send_text(MAV_SEVERITY_INFO,"yaw0=%f,%f,%ld",yaw1,accel,t);
 }
 #endif
 

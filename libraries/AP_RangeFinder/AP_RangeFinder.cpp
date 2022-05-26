@@ -53,7 +53,7 @@
 #include <AP_BoardConfig/AP_BoardConfig.h>
 #include <AP_Logger/AP_Logger.h>
 #include <AP_Vehicle/AP_Vehicle_Type.h>
-
+#include "AP_RangeFinder_MR72.h"
 extern const AP_HAL::HAL &hal;
 
 // table of user settable parameters
@@ -539,6 +539,11 @@ void RangeFinder::detect_instance(uint8_t instance, uint8_t& serial_instance)
             _add_backend(new AP_RangeFinder_Lanbao(state[instance], params[instance]), instance, serial_instance++);
         }
         break;
+    case Type::MR72:
+        if (AP_RangeFinder_Benewake::detect(serial_instance)) {
+            _add_backend(new AP_RangeFinder_MR72(state[instance], params[instance]), instance, serial_instance++);
+        }
+        break;     
     case Type::LeddarVu8_Serial:
         if (AP_RangeFinder_LeddarVu8::detect(serial_instance)) {
             _add_backend(new AP_RangeFinder_LeddarVu8(state[instance], params[instance]), instance, serial_instance++);

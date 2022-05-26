@@ -59,12 +59,13 @@ AP_GPS_NOVA::AP_GPS_NOVA(AP_GPS &_gps, AP_GPS::GPS_State &_state,
     }
 }
 
-const char* const AP_GPS_NOVA::_initialisation_blob[6] {
+const char* const AP_GPS_NOVA::_initialisation_blob[7] {
     "\r\n\r\nunlogall\r\n", // cleanup enviroment
     "log bestposb ontime 0.2 0 nohold\r\n", // get bestpos
     "log bestvelb ontime 0.2 0 nohold\r\n", // get bestvel
     "log psrdopb onchanged\r\n", // tersus
     "log psrdopb ontime 0.2\r\n", // comnav
+    "log headingb ontime 1\r\n", // heading
     "log psrdopb\r\n" // poll message, as dop only changes when a sat is dropped/added to the visible list
 };
 
@@ -274,7 +275,22 @@ AP_GPS_NOVA::process_message(void)
         state.vdop = (uint16_t) (psrdopu.htdop*100);
         return false;
     }
-
+    if (messageid == 1657 || messageid == 971) // psrdop
+    {
+        const heading3a &heading3au = nova_msg.data.heading3au;
+        if(heading3au.solstat == 0 )//&& heading3au.postype == 50)
+        {
+            state.gps_yaw = heading3au.heading;
+            state.have_gps_yaw = true;
+            state.gps_yaw_accuracy =  1;
+            state.have_gps_yaw_accuracy = true;
+            state.gps_yaw_time_ms = AP_HAL::millis();
+        } else {
+            state.have_gps_yaw = false;
+            state.have_gps_yaw_accuracy = false;
+        }
+        return false;
+    }
     // ensure out position and velocity stay insync
     if (_new_position && _new_speed && _last_vel_time == state.time_week_ms) {
         _new_speed = _new_position = false;

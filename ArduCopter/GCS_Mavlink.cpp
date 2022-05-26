@@ -529,6 +529,7 @@ static const ap_message STREAM_EXTRA3_msgs[] = {
     MSG_ESC_TELEMETRY,
     MSG_GENERATOR_STATUS,
     MSG_WINCH_STATUS,
+    MSG_V2_EXTENSION,
 };
 static const ap_message STREAM_PARAMS_msgs[] = {
     MSG_NEXT_PARAM
@@ -1411,7 +1412,18 @@ void GCS_MAVLINK_Copter::handleMessage(const mavlink_message_t &msg)
         copter.g2.toy_mode.handle_message(msg);
         break;
 #endif
-        
+    case MAVLINK_MSG_ID_V2_EXTENSION :
+        {
+            mavlink_v2_extension_t packet;
+            mavlink_msg_v2_extension_decode(&msg,&packet);
+            if(packet.message_type == 32768)
+            {
+                //copter.serial_concentrator.send_data(packet.payload,msg.len);
+                copter.serial_concentrator.send_data(&packet.payload[1],packet.payload[0]);
+            }
+
+        }
+        break;    
     default:
         handle_common_message(msg);
         break;

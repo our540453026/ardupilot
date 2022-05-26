@@ -74,6 +74,7 @@ public:
         Notify_LED_Scripting                = (1 << 10),// Colour accessor for scripting
         Notify_LED_DShot                    = (1 << 11),// Use dshot commands to set ESC LEDs
         Notify_LED_ProfiLED_SPI             = (1 << 12), // ProfiLED
+        Notify_LED_PCA9632LED_I2C_External  = (1 << 13),
         Notify_LED_MAX
     };
 
