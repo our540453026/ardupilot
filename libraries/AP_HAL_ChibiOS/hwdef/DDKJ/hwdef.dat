@@ -221,19 +221,19 @@ PD2 SDMMC1_CMD SDMMC1
 
 # red LED marked as B/E
 
-#PB6 LED_RED OUTPUT  HIGH GPIO(0)
-#PB7 LED_GREEN OUTPUT  LOW  GPIO(1)
-#PD14 LED_BLUE OUTPUT  HIGH GPIO(2)
+PA3 LED_RED OUTPUT  HIGH GPIO(0)
+PC4 LED_GREEN OUTPUT  LOW  GPIO(1)
+PC5 LED_BLUE OUTPUT  HIGH GPIO(2)
 
-#define HAL_GPIO_A_LED_PIN 0
-#define HAL_GPIO_B_LED_PIN 1
-#define HAL_GPIO_C_LED_PIN 2
+define HAL_GPIO_A_LED_PIN 0
+define HAL_GPIO_B_LED_PIN 1
+define HAL_GPIO_C_LED_PIN 2
 
-#define HAL_GPIO_LED_ON  0
-#define HAL_GPIO_LED_OFF 1
+define HAL_GPIO_LED_ON  1
+define HAL_GPIO_LED_OFF 0
 
 # use pixracer style 3-LED indicators
-#define HAL_HAVE_PIXRACER_LED
+define HAL_HAVE_PIXRACER_LED
 
 # green LED marked as PWR. We leave this solid on, but allow
 # for it to be controlled as a relay if needed

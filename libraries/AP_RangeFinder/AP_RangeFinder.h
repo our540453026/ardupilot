@@ -90,6 +90,7 @@ public:
         USD1_CAN = 33,
         Benewake_CAN = 34,
         MR72 = 35,
+        TOFP_F = 36,
         SIM = 100,
     };
 

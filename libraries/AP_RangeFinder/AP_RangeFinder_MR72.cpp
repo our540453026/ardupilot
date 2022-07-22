@@ -19,16 +19,19 @@
 #include <stdio.h>
 
 extern const AP_HAL::HAL& hal;
-
+#define MR72_DIST_MAX_CM 65536
+#define MR72_OUT_OF_RANGE_ADD_CM 100
 /* 
    The constructor also initialises the rangefinder. Note that this
    constructor is not called until detect() returns true, so we
    already know that we should setup the rangefinder
 */
 // distance returned in reading_cm, signal_ok is set to true if sensor reports a strong signal
-bool AP_RangeFinder_MR72::get_reading(float &reading_cm)
+bool AP_RangeFinder_MR72::get_reading(float &reading_m)
 {
     uint8_t c;
+    float sum_cm = 0;
+    uint16_t count = 0;
     if (uart == nullptr) {
         return false;
     }
@@ -71,15 +74,17 @@ bool AP_RangeFinder_MR72::get_reading(float &reading_cm)
 
                     if((uint8_t)crc_crc8(data_msg.data.bytes,MR72_DATA_LENGHT)==c)
                     {
-                        reading_cm = swapInt16(data_msg.data.three_sec.sector_2);
-
-                        return true;
+                        //reading_cm = swapInt16(data_msg.data.three_sec.sector_2);
+                        uint16_t dist = swapInt16(data_msg.data.three_sec.sector_2);
+                        sum_cm += dist;
+                        count++;
+                        //return true;
                     }
                     else
                     {
-                        data_msg.mr72_state = data_msg_parser::PREAMBLE1;
                         //gcs().send_text(MAV_SEVERITY_CRITICAL,"secerror=%d",state.distance_cm);
                     }
+                    data_msg.mr72_state = data_msg_parser::PREAMBLE1;
                     break;
                 default:
                     data_msg.mr72_state = data_msg_parser::PREAMBLE1;
@@ -87,6 +92,12 @@ bool AP_RangeFinder_MR72::get_reading(float &reading_cm)
         }
 
     }
+    if (count > 0) {
+        // return average distance of readings
+        reading_m = (sum_cm * 0.01f) / count;
+        return true;
+    }
+    
     return false; // no readings so return false
 }
 /* 

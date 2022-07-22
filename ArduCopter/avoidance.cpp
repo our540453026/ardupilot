@@ -12,7 +12,7 @@ void Copter::low_alt_avoidance()
     }
 
     bool enable_avoidance = true;
-    if (alt_cm < avoid.get_min_alt() * 100.0f) {
+    if (alt_cm < avoid.get_min_alt() * 100.0f || ahrs_view->groundspeed() < 1.0) {
         enable_avoidance = false;
     }
     avoid.proximity_alt_avoidance_enable(enable_avoidance);
