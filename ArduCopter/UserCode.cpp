@@ -19,6 +19,30 @@ void Copter::userhook_FastLoop()
 void Copter::userhook_50Hz()
 {
     // put your 50Hz code here
+    uint8_t proximity_valid_bitmask=0;
+    if (copter.g2.proximity.get_status() == AP_Proximity::Status::Good) {
+        AP_Proximity::Proximity_Distance_Array dist_array;
+        if (copter.g2.proximity.get_horizontal_distances(dist_array)) {
+            for (uint8_t i = 0; i < PROXIMITY_MAX_DIRECTION; i++) {
+                if (dist_array.valid(i)) {
+                    proximity_valid_bitmask |= (1U << i);
+                } else if (!(proximity_valid_bitmask & (1U << i))) {
+                    // we've never sent this distance out, so we don't
+                    // need to send an invalid one.
+                    continue;
+                }               
+                if(get_mode() == 3 && ahrs_view->groundspeed() > 1.0)
+                {
+                
+                    test_dis_home = home_distance()/100.0;
+                    test_dis_tof = dist_array.distance[i] * 100.0f;
+                   // set_mode_SmartRTL_or_RTL(ModeReason::AUTO_RTL_EXIT);
+                    set_mode(Mode::Number::RTL, ModeReason::AUTO_RTL_EXIT);
+                    
+                }              
+            }
+        }
+    }
 }
 #endif
 
@@ -26,6 +50,8 @@ void Copter::userhook_50Hz()
 void Copter::userhook_MediumLoop()
 {
     // put your 10Hz code here
+    serial_compass.update();
+    serial_concentrator.update();
 }
 #endif
 
@@ -33,6 +59,7 @@ void Copter::userhook_MediumLoop()
 void Copter::userhook_SlowLoop()
 {
     // put your 3.3Hz code here
+    
 }
 #endif
 
@@ -40,6 +67,34 @@ void Copter::userhook_SlowLoop()
 void Copter::userhook_SuperSlowLoop()
 {
     // put your 1Hz code here
+    uint8_t proximity_valid_bitmask=0;
+    //uint8_t mode;
+    float yaw1 = 0.0;
+    float accel = 0.0;
+    uint32_t t;
+    gps.gps_yaw_deg(yaw1,accel,t);
+    gcs().send_text(MAV_SEVERITY_INFO,"yaw0=%.1f",yaw1);
+   // home_distance();//ahrs_view->get_relative_position_D_home(test_dis_home);
+    //gcs().send_text(MAV_SEVERITY_INFO,"hom=%f",home_distance()/100.0);
+    //ahrs_view->get_relative_position_D_origin(test_dis_home);
+    //gcs().send_text(MAV_SEVERITY_INFO,"hom1=%f",test_dis_home);
+    //copter.g2.proximity.get_upward_distance(dist);   
+   // gcs().send_text(MAV_SEVERITY_INFO,"v=%f",ahrs_view->groundspeed());
+    if (copter.g2.proximity.get_status() == AP_Proximity::Status::Good) {
+        AP_Proximity::Proximity_Distance_Array dist_array;
+        if (copter.g2.proximity.get_horizontal_distances(dist_array)) {
+            for (uint8_t i = 0; i < PROXIMITY_MAX_DIRECTION; i++) {
+                if (dist_array.valid(i)) {
+                    proximity_valid_bitmask |= (1U << i);
+                } else if (!(proximity_valid_bitmask & (1U << i))) {
+                    // we've never sent this distance out, so we don't
+                    // need to send an invalid one.
+                    continue;
+                }
+                gcs().send_text(MAV_SEVERITY_INFO,"dis_hor=%f,hom1=%f,tof=%f",dist_array.distance[i] * 100.0f,test_dis_home,test_dis_tof);              
+            }
+        }
+    }
 }
 #endif
 
