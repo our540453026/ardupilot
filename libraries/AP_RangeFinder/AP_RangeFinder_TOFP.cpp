@@ -17,7 +17,7 @@
 #include "AP_RangeFinder_TOFP.h"
 #include <AP_Math/crc.h>
 #include <stdio.h>
-
+#include <../ArduCopter/Copter.h>
 extern const AP_HAL::HAL& hal;
 #define TOFP_DIST_MAX_CM 65536
 #define TOFP_OUT_OF_RANGE_ADD_CM 100
@@ -108,6 +108,7 @@ bool AP_RangeFinder_TOFP::get_reading(float &reading_m)
     if (count > 0) {
         // return average distance of readings
         reading_m = (sum_cm * 0.001f) / count;
+        copter.tof_val = reading_m;
         if((data_msg.tofp.System_time -last_time) >= 1000)
         {
             //gcs().send_text(MAV_SEVERITY_INFO,"disance=%f",reading_m);

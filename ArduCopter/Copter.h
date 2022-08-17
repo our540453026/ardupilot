@@ -224,6 +224,8 @@ public:
     AP_SerialCompass serial_compass;
     float test_dis_home = 0;
     float test_dis_tof = 0;
+    uint8_t proximity_bitmask_val;
+    float tof_val = 0;
 private:
 
     // key aircraft parameters passed to multiple libraries

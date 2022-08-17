@@ -30,14 +30,15 @@ void Copter::userhook_50Hz()
                     // we've never sent this distance out, so we don't
                     // need to send an invalid one.
                     continue;
-                }               
-                if(get_mode() == 3 && ahrs_view->groundspeed() > 1.0)
-                {
-                
-                    test_dis_home = home_distance()/100.0;
+                }
+
+                if(get_mode() == 3 && ahrs_view->groundspeed() > 1.0 && dist_array.distance[i]>0.2 && dist_array.distance[i] < 25)
+                {               
+                    test_dis_home = tof_val;//home_distance()/100.0;
                     test_dis_tof = dist_array.distance[i] * 100.0f;
+                    proximity_bitmask_val = i;
                    // set_mode_SmartRTL_or_RTL(ModeReason::AUTO_RTL_EXIT);
-                    set_mode(Mode::Number::RTL, ModeReason::AUTO_RTL_EXIT);
+                    set_mode(Mode::Number::LOITER, ModeReason::AVOIDANCE);
                     
                 }              
             }
@@ -74,6 +75,7 @@ void Copter::userhook_SuperSlowLoop()
     uint32_t t;
     gps.gps_yaw_deg(yaw1,accel,t);
     gcs().send_text(MAV_SEVERITY_INFO,"yaw0=%.1f",yaw1);
+    gcs().send_text(MAV_SEVERITY_INFO,"tof=%f",tof_val); 
    // home_distance();//ahrs_view->get_relative_position_D_home(test_dis_home);
     //gcs().send_text(MAV_SEVERITY_INFO,"hom=%f",home_distance()/100.0);
     //ahrs_view->get_relative_position_D_origin(test_dis_home);
@@ -91,7 +93,7 @@ void Copter::userhook_SuperSlowLoop()
                     // need to send an invalid one.
                     continue;
                 }
-                gcs().send_text(MAV_SEVERITY_INFO,"dis_hor=%f,hom1=%f,tof=%f",dist_array.distance[i] * 100.0f,test_dis_home,test_dis_tof);              
+                gcs().send_text(MAV_SEVERITY_INFO,"dis_hor=%f,hom1=%f,tof=%f,bit=%d",dist_array.distance[i] * 100.0f,test_dis_home,test_dis_tof,proximity_bitmask_val);              
             }
         }
     }
