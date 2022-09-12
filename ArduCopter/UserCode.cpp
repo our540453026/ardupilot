@@ -74,8 +74,8 @@ void Copter::userhook_SuperSlowLoop()
     float accel = 0.0;
     uint32_t t;
     gps.gps_yaw_deg(yaw1,accel,t);
-    gcs().send_text(MAV_SEVERITY_INFO,"yaw0=%.1f",yaw1);
-    gcs().send_text(MAV_SEVERITY_INFO,"tof=%f",tof_val); 
+    //gcs().send_text(MAV_SEVERITY_INFO,"yaw0=%.1f",yaw1);
+    //gcs().send_text(MAV_SEVERITY_INFO,"tof=%f",tof_val); 
    // home_distance();//ahrs_view->get_relative_position_D_home(test_dis_home);
     //gcs().send_text(MAV_SEVERITY_INFO,"hom=%f",home_distance()/100.0);
     //ahrs_view->get_relative_position_D_origin(test_dis_home);

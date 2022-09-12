@@ -80,7 +80,7 @@ bool AP_SerialConcentrator::update(void)
     _last_update_time = AP_HAL::micros();
     int16_t numc = _port->available();
     uint8_t data;
-    //gcs().send_text(MAV_SEVERITY_CRITICAL,"serialdata: %d", numc);
+    //gcs().send_text(MAV_SEVERITY_INFO,"serialdata: %d", numc);
     for(int16_t i=0;i<numc;i++)
     {
         data = _port->read();
@@ -179,6 +179,10 @@ bool AP_SerialConcentrator::parse(uint8_t temp)
                     data_msg.rec_state = data_msg_parser::COMPTYPE;
                     data_msg.length += temp;
                     g_crc_val += temp;
+                    if(data_msg.length >= 512) //错误处理
+                    {
+                        data_msg.rec_state = data_msg_parser::PREAMBLE1;
+                    }
                     break;
                 case data_msg_parser::COMPTYPE:
                     data_msg.comptype = temp;
@@ -254,6 +258,7 @@ bool AP_SerialConcentrator::Data_Message_Process(void)
             bms_state.pcb_temp2 = data_msg.data.bms.pcb_temp2;
             bms_state.type = data_msg.data.bms.type;
             bms_state.time_s = AP_HAL::micros();
+            gcs().send_text(MAV_SEVERITY_INFO,"P900=%d,RTK=%d,ecs1=%d,ecs2=%d",bms_state.cell_vot[0],bms_state.cell_vot[1],bms_state.cell_vot[2],bms_state.cell_vot[3]);
             break;
         case ACK_MSG_ID:
             Tx_urgent_statue = true;

@@ -2,7 +2,7 @@
 #include <AP_Common/AP_Common.h>
 #include <AP_Math/AP_Math.h>
 #include "AP_BattMonitor_Analog.h"
-
+//#include <../ArduCopter/Copter.h>
 extern const AP_HAL::HAL& hal;
 
 const AP_Param::GroupInfo AP_BattMonitor_Analog::var_info[] = {
@@ -96,6 +96,7 @@ AP_BattMonitor_Analog::read()
         // record time
         _state.last_time_micros = tnow;
     }
+    
 }
 
 /// return true if battery provides current info

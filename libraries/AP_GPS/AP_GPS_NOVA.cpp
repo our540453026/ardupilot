@@ -59,14 +59,30 @@ AP_GPS_NOVA::AP_GPS_NOVA(AP_GPS &_gps, AP_GPS::GPS_State &_state,
     }
 }
 
-const char* const AP_GPS_NOVA::_initialisation_blob[7] {
+const char* const AP_GPS_NOVA::_initialisation_blob[21] {
     "\r\n\r\nunlogall\r\n", // cleanup enviroment
-    "log bestposb ontime 0.2 0 nohold\r\n", // get bestpos
-    "log bestvelb ontime 0.2 0 nohold\r\n", // get bestvel
-    "log psrdopb onchanged\r\n", // tersus
-    "log psrdopb ontime 0.2\r\n", // comnav
+    "log bestposb ontime 0.2 \r\n", // get bestpos 0 nohold
+    "log bestvelb ontime 0.2 \r\n", // get bestvel 0 nohold
+    //"log psrdopb onchanged\r\n", // tersus
+    "log psrdopb ontime 1\r\n", // comnav
     "log headingb ontime 1\r\n", // heading
-    "log psrdopb\r\n" // poll message, as dop only changes when a sat is dropped/added to the visible list
+    //"log psrdopb\r\n", // poll message, as dop only changes when a sat is dropped/added to the visible list
+    "COM COM1 460800\r\n",
+    "LOG COM1 RAWEPHEMB ONTIME 10\r\n",
+    "LOG COM1 RAWALMB ONTIME 10\r\n",
+    "LOG COM1 IONUTCB ONTIME 10\r\n",
+    "LOG COM1 GLOEPHEMERISB ONTIME 10\r\n",
+    "LOG COM1 BD2EPHEMB ONTIME 10\r\n",
+    "LOG COM1 BD3EPHEMB ONTIME 10\r\n",
+    "LOG COM1 TIMEB ONTIME 0.2\r\n",
+    "LOG COM1 RANGECMPB ONTIME 0.2\r\n",
+    "LOG COM1 GPZDA ONTIME 1\r\n",
+    "log COM1 GPGGA ontime 1\r\n",
+    "MARKCONTROL MARK1 ENABLE NEGATIVE 600 200\r\n",
+    "markcontrol mark1 enable negative 0 0\r\n",
+    "log COM1 marktimea onnew\r\n",
+    "log COM1 markposa onnew\r\n",
+    "INTERFACEMODE RTCMV3 RTCMV3 on\r\n"
 };
 
 // Process all bytes available from the stream

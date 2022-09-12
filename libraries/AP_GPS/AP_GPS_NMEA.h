@@ -80,6 +80,7 @@ private:
         _GPS_SENTENCE_PHD = 138, // extension for AllyStar GPS modules
         _GPS_SENTENCE_THS = 160, // True heading with quality indicator, available on Trimble MB-Two
         _GPS_SENTENCE_KSXT = 170, // extension for Unicore, 21 fields
+        _GPS_SENTENCE_GSA = 202, 
         _GPS_SENTENCE_OTHER = 0
     };
 
@@ -144,6 +145,8 @@ private:
     int32_t _new_course;                                        ///< course parsed from a term
     float   _new_gps_yaw;                                        ///< yaw parsed from a term
     uint16_t _new_hdop;                                                 ///< HDOP parsed from a term
+    uint16_t _new_vdop;
+    uint16_t _new_pdop;
     uint8_t _new_satellite_count;                       ///< satellite count parsed from a term
     uint8_t _new_quality_indicator;                                     ///< GPS quality indicator parsed from a term
 
@@ -156,6 +159,7 @@ private:
     uint32_t _last_3D_velocity_ms;
     uint32_t _last_KSXT_pos_ms;
     uint32_t _last_fix_ms;
+    uint32_t _last_GSA_ms;
 
     /// @name	Init strings
     ///			In ::init, an attempt is made to configure the GPS

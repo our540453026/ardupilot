@@ -27,7 +27,12 @@
 #define AP_SerialCompass_BAUD           115200
 #define AP_SerialCompass_BUFSIZE_RX     256
 #define AP_SerialCompass_BUFSIZE_TX     256
+#define IST8310_RESOLUTION 0.3
 
+static const int16_t IST8310_MAX_VAL_XY = (1600 / IST8310_RESOLUTION) + 1;
+static const int16_t IST8310_MIN_VAL_XY = -IST8310_MAX_VAL_XY;
+static const int16_t IST8310_MAX_VAL_Z  = (2500 / IST8310_RESOLUTION) + 1;
+static const int16_t IST8310_MIN_VAL_Z  = -IST8310_MAX_VAL_Z;
 extern const AP_HAL::HAL& hal;
 
 AP_SerialCompass::AP_SerialCompass()
@@ -133,11 +138,13 @@ bool AP_SerialCompass::parse(uint8_t temp)
                     data_msg.msgid = temp;
                     data_msg.rec_state = data_msg_parser::LENGTH1;
                     data_msg.data.bytes[data_msg.read_count++] = temp;
+                    //if(data_msg.msgid != ID_5883 || data_msg.msgid != ID_8310) data_msg.rec_state = data_msg_parser::PREAMBLE1;
                     break;
                 case data_msg_parser::LENGTH1:
                     data_msg.rec_state = data_msg_parser::PAYLOAD;
                     data_msg.length = temp;
                     data_msg.data.bytes[data_msg.read_count++] = temp;
+                    if(data_msg.length > 8) data_msg.rec_state = data_msg_parser::PREAMBLE1;
                     break;
                 case data_msg_parser::PAYLOAD:
                     data_msg.data.bytes[data_msg.read_count++] = temp;
@@ -185,9 +192,15 @@ bool AP_SerialCompass::Data_Message_Process(void)
     {
         if(data_msg.data.mag.id == ID_8310)
         {
-            mag_state.magX = -static_cast<int16_t>(swapInt16(data_msg.data.mag.mag_x));   
+            mag_state.magX = static_cast<int16_t>(swapInt16(data_msg.data.mag.mag_x));   
             mag_state.magY = static_cast<int16_t>(swapInt16(data_msg.data.mag.mag_y));
-            mag_state.magZ = -static_cast<int16_t>(swapInt16(data_msg.data.mag.mag_z)); 
+            mag_state.magZ = static_cast<int16_t>(swapInt16(data_msg.data.mag.mag_z)); 
+            if (mag_state.magX > IST8310_MAX_VAL_XY || mag_state.magX < IST8310_MIN_VAL_XY ||
+                mag_state.magY > IST8310_MAX_VAL_XY || mag_state.magY < IST8310_MIN_VAL_XY ||
+                mag_state.magZ > IST8310_MAX_VAL_Z  || mag_state.magZ < IST8310_MIN_VAL_Z) {
+                return true;
+            }
+            mag_state.magZ = -mag_state.magZ;
             AP::compass().handle_serial(mag_state.magX* 3.0f,mag_state.magY* 3.0f,mag_state.magZ* 3.0f); 
         }
 

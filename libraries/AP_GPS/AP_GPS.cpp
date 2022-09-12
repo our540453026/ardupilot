@@ -36,7 +36,7 @@
 #include "AP_GPS_MSP.h"
 #include "AP_GPS_ExternalAHRS.h"
 #include "GPS_Backend.h"
-
+#include "AP_GPS_ATGM.h"
 #if HAL_ENABLE_LIBUAVCAN_DRIVERS
 #include <AP_CANManager/AP_CANManager.h>
 #include <AP_UAVCAN/AP_UAVCAN.h>
@@ -654,6 +654,12 @@ void AP_GPS::detect_instance(uint8_t instance)
         new_gps = new AP_GPS_NOVA(*this, state[instance], _port[instance]);
         break;
 #endif //AP_GPS_NOVA_ENABLED
+#if AP_GPS_ATGM_ENABLED
+    case GPS_TYPE_ATGM:
+        //dstate->auto_detected_baud = false;
+        new_gps = new AP_GPS_ATGM(*this, state[instance], _port[instance]);
+        break;
+#endif //AP_GPS_ATGM_ENABLED
     default:
         break;
     }

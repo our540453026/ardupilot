@@ -338,6 +338,11 @@ bool AP_GPS_NMEA::_term_complete()
                     }
                     // VTG has no fix indicator, can't change fix status
                     break;
+                case _GPS_SENTENCE_GSA:
+                    _last_GSA_ms = now;
+                    state.vdop          = _new_vdop*10;
+                    // VTG has no fix indicator, can't change fix status
+                    break;
                 case _GPS_SENTENCE_HDT:
                 case _GPS_SENTENCE_THS:
                     _last_yaw_ms = now;
@@ -446,7 +451,9 @@ bool AP_GPS_NMEA::_term_complete()
         const char *term_type = &_term[2];
         if (strcmp(term_type, "RMC") == 0) {
             _sentence_type = _GPS_SENTENCE_RMC;
-        } else if (strcmp(term_type, "GGA") == 0) {
+        } else if (strcmp(term_type, "GSA") == 0) {
+            _sentence_type = _GPS_SENTENCE_GSA;
+        }else if (strcmp(term_type, "GGA") == 0) {
             _sentence_type = _GPS_SENTENCE_GGA;
         } else if (strcmp(term_type, "HDT") == 0) {
             _sentence_type = _GPS_SENTENCE_HDT;
@@ -489,7 +496,12 @@ bool AP_GPS_NMEA::_term_complete()
         case _GPS_SENTENCE_GGA + 8: // HDOP (GGA)
             _new_hdop = (uint16_t)_parse_decimal_100(_term);
             break;
-
+        case _GPS_SENTENCE_GSA + 4: // HDOP (GGA)
+            _new_pdop = (uint16_t)_parse_decimal_100(_term);
+            break;
+        case _GPS_SENTENCE_GSA + 6: // HDOP (GGA)
+            _new_vdop = (uint16_t)_parse_decimal_100(_term);
+            break;
         // time and date
         //
         case _GPS_SENTENCE_RMC + 1: // Time (RMC)

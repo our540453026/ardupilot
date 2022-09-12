@@ -79,7 +79,7 @@ bool AP_RangeFinder_TOFP::get_reading(float &reading_m)
 
                     if(data_msg.crc == c)
                     {
-                        if(decode(data_msg.data.bytes)==1)
+                        if(decode(data_msg.data.bytes)==1 && data_msg.tofp.range_precision < 40)
                         {                      
                             sum_cm += data_msg.tofp.dis;
                             count++;
@@ -111,7 +111,7 @@ bool AP_RangeFinder_TOFP::get_reading(float &reading_m)
         copter.tof_val = reading_m;
         if((data_msg.tofp.System_time -last_time) >= 1000)
         {
-            //gcs().send_text(MAV_SEVERITY_INFO,"disance=%f",reading_m);
+            //gcs().send_text(MAV_SEVERITY_INFO,"preci=%d",data_msg.tofp.range_precision);
             last_time = data_msg.tofp.System_time;
         }
         
