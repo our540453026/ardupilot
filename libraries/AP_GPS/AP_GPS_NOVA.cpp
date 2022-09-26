@@ -20,7 +20,7 @@
 #include "AP_GPS.h"
 #include "AP_GPS_NOVA.h"
 #include <AP_Logger/AP_Logger.h>
-
+#include <../ArduCopter/Copter.h>
 #if AP_GPS_NOVA_ENABLED
 
 extern const AP_HAL::HAL& hal;
@@ -59,15 +59,15 @@ AP_GPS_NOVA::AP_GPS_NOVA(AP_GPS &_gps, AP_GPS::GPS_State &_state,
     }
 }
 
-const char* const AP_GPS_NOVA::_initialisation_blob[21] {
+const char* const AP_GPS_NOVA::_initialisation_blob[3] {
     "\r\n\r\nunlogall\r\n", // cleanup enviroment
-    "log bestposb ontime 0.2 \r\n", // get bestpos 0 nohold
-    "log bestvelb ontime 0.2 \r\n", // get bestvel 0 nohold
-    //"log psrdopb onchanged\r\n", // tersus
-    "log psrdopb ontime 1\r\n", // comnav
-    "log headingb ontime 1\r\n", // heading
-    //"log psrdopb\r\n", // poll message, as dop only changes when a sat is dropped/added to the visible list
-    "COM COM1 460800\r\n",
+    //"log bestposb ontime 0.1 \r\n", // get bestpos 0 nohold
+   // "log bestvelb ontime 0.1 \r\n", // get bestvel 0 nohold   
+    //"log psrdopb ontime 0.2\r\n", // comnav  STADOPB 0.1
+    //"log headingb ontime 0.1\r\n", // heading
+    "BESTNAVB 0.1\r\n", // poll message, as dop only changes when a sat is dropped/added to the visible list
+    "STADOPB 0.5\r\n", // tersus
+    /*"COM COM1 460800\r\n",
     "LOG COM1 RAWEPHEMB ONTIME 10\r\n",
     "LOG COM1 RAWALMB ONTIME 10\r\n",
     "LOG COM1 IONUTCB ONTIME 10\r\n",
@@ -82,7 +82,7 @@ const char* const AP_GPS_NOVA::_initialisation_blob[21] {
     "markcontrol mark1 enable negative 0 0\r\n",
     "log COM1 marktimea onnew\r\n",
     "log COM1 markposa onnew\r\n",
-    "INTERFACEMODE RTCMV3 RTCMV3 on\r\n"
+    "INTERFACEMODE RTCMV3 RTCMV3 on\r\n"*/
 };
 
 // Process all bytes available from the stream
@@ -134,9 +134,18 @@ AP_GPS_NOVA::parse(uint8_t temp)
             break;
         case nova_msg_parser::PREAMBLE3:
             if (temp == NOVA_PREAMBLE3) {
+                nova_msg.header.data[2] = NOVA_PREAMBLE3;
                 nova_msg.nova_state = nova_msg_parser::HEADERLENGTH;
             } else {
-                nova_msg.nova_state = nova_msg_parser::PREAMBLE1;
+                if(temp == UM_PREAMBLE3){
+                    nova_msg.nova_state = nova_msg_parser::UMHEADERDATA;
+                    nova_msg.header.data[2] = UM_PREAMBLE3;
+                    nova_msg.read = 3;
+                }
+                else{
+                    nova_msg.nova_state = nova_msg_parser::PREAMBLE1;
+                }
+                
             }
             break;
         case nova_msg_parser::HEADERLENGTH:
@@ -187,13 +196,74 @@ AP_GPS_NOVA::parse(uint8_t temp)
             nova_msg.crc += (uint32_t) (temp << 24);
             nova_msg.nova_state = nova_msg_parser::PREAMBLE1;
 
-            uint32_t crc = CalculateBlockCRC32((uint32_t)nova_msg.header.nova_headeru.headerlength, (uint8_t *)&nova_msg.header.data, (uint32_t)0);
-            crc = CalculateBlockCRC32((uint32_t)nova_msg.header.nova_headeru.messagelength, (uint8_t *)&nova_msg.data, crc);
+            nova_crc = CalculateBlockCRC32((uint32_t)nova_msg.header.nova_headeru.headerlength, (uint8_t *)&nova_msg.header.data, (uint32_t)0);
+            nova_crc = CalculateBlockCRC32((uint32_t)nova_msg.header.nova_headeru.messagelength, (uint8_t *)&nova_msg.data, nova_crc);
 
-            if (nova_msg.crc == crc) {
+            if (nova_msg.crc == nova_crc) {
                 return process_message();
             } else {
                 Debug("crc failed");
+                crc_error_counter++;
+            }
+            break;
+        case nova_msg_parser::UMHEADERDATA:
+            if (nova_msg.read >= sizeof(nova_msg.header.data)) {
+                Debug("parse header overflow length=%u\n", (unsigned)nova_msg.read);
+                nova_msg.nova_state = nova_msg_parser::PREAMBLE1;
+                break;
+            }
+            nova_msg.header.data[nova_msg.read] = temp;
+            nova_msg.read++;
+            if (nova_msg.read >= 24) {
+                nova_msg.nova_state = nova_msg_parser::UMDATA;
+            }
+            break;
+        case nova_msg_parser::UMDATA:
+            if (nova_msg.read >= sizeof(nova_msg.data)) {
+                Debug("parse data overflow length=%u msglength=%u\n", (unsigned)nova_msg.read,nova_msg.header.um_headeru.messagelength);
+                nova_msg.nova_state = nova_msg_parser::PREAMBLE1;
+                break;
+            }
+            nova_msg.data.bytes[nova_msg.read - 24] = temp;
+            nova_msg.read++;
+            if (nova_msg.read >= (nova_msg.header.um_headeru.messagelength + 24)) {
+                Debug("NOVA DATA exit\n");
+                nova_msg.nova_state = nova_msg_parser::UMCRC1;
+            }
+            break;
+        case nova_msg_parser::UMCRC1:
+            nova_msg.crc = (uint32_t) (temp << 0);
+            nova_msg.nova_state = nova_msg_parser::UMCRC2;
+            break;
+        case nova_msg_parser::UMCRC2:
+            nova_msg.crc += (uint32_t) (temp << 8);
+            nova_msg.nova_state = nova_msg_parser::UMCRC3;
+            break;
+        case nova_msg_parser::UMCRC3:
+            nova_msg.crc += (uint32_t) (temp << 16);
+            nova_msg.nova_state = nova_msg_parser::UMCRC4;
+            break;
+        case nova_msg_parser::UMCRC4:
+            nova_msg.crc += (uint32_t) (temp << 24);
+            nova_msg.nova_state = nova_msg_parser::PREAMBLE1;
+            //gcs().send_text(MAV_SEVERITY_INFO,"u-crc=%ld",nova_crc);
+            //nova_crc = UM_CRC32(24,(uint8_t *)&nova_msg.header.data,(uint32_t)nova_msg.header.um_headeru.messagelength, (uint8_t *)&nova_msg.data.bytes);
+            nova_crc = CalculateBlockCRC32(24, (uint8_t *)&nova_msg.header.data, (uint32_t)0);
+            nova_crc = CalculateBlockCRC32((uint32_t)nova_msg.header.um_headeru.messagelength, (uint8_t *)&nova_msg.data, nova_crc);
+            //gcs().send_text(MAV_SEVERITY_INFO,"mslen=%d",nova_msg.header.um_headeru.messagelength);
+            //for(int i=0;i<nova_msg.header.um_headeru.messagelength;i=i+10)
+            //{
+
+                //gcs().send_text(MAV_SEVERITY_INFO,"%x,%x,%x,%x,%x,%x,%x,%x,%x,%x",nova_msg.data.bytes[i+0],nova_msg.data.bytes[i+1],nova_msg.data.bytes[i+2],nova_msg.data.bytes[i+3],nova_msg.data.bytes[i+4],nova_msg.data.bytes[i+5],nova_msg.data.bytes[i+6],nova_msg.data.bytes[i+7],nova_msg.data.bytes[i+8],nova_msg.data.bytes[i+9]);
+            //}
+            //gcs().send_text(MAV_SEVERITY_INFO,"u-n=%ld,%ld",nova_msg.crc,nova_crc);
+            
+            if (nova_msg.crc == nova_crc) {
+                return process_message();
+                //gcs().send_text(MAV_SEVERITY_INFO,"umok");
+            } else {
+                Debug("crc failed");
+                //gcs().send_text(MAV_SEVERITY_INFO,"umerror");
                 crc_error_counter++;
             }
             break;
@@ -209,8 +279,8 @@ AP_GPS_NOVA::process_message(void)
 
     Debug("NOVA process_message messid=%u\n",messageid);
 
-    check_new_itow(nova_msg.header.nova_headeru.tow, nova_msg.header.nova_headeru.messagelength + nova_msg.header.nova_headeru.headerlength);
-    
+    //check_new_itow(nova_msg.header.nova_headeru.tow, nova_msg.header.nova_headeru.messagelength + nova_msg.header.nova_headeru.headerlength);
+    check_new_itow(nova_msg.header.um_headeru.ms, nova_msg.header.um_headeru.messagelength + 24);
     if (messageid == 42) // bestpos
     {
         const bestpos &bestposu = nova_msg.data.bestposu;
@@ -268,7 +338,70 @@ AP_GPS_NOVA::process_message(void)
         
         _new_position = true;
     }
+    if (messageid == 2118) // bestnav
+    {
+        const bestnav &bestnavu = nova_msg.data.bestnavu;
 
+        state.time_week = nova_msg.header.um_headeru.wn;
+        state.time_week_ms = (uint32_t) nova_msg.header.um_headeru.ms;
+        state.last_gps_time_ms = AP_HAL::millis();
+
+        state.location.lat = (int32_t) (bestnavu.lat * (double)1e7);
+        state.location.lng = (int32_t) (bestnavu.lng * (double)1e7);
+        state.location.alt = (int32_t) (bestnavu.hgt * 100);
+
+        state.num_sats = bestnavu.svsused;
+
+        state.horizontal_accuracy = (float) ((bestnavu.latsdev + bestnavu.lngsdev)/2);
+        state.vertical_accuracy = (float) bestnavu.hgtsdev;
+        state.have_horizontal_accuracy = true;
+        state.have_vertical_accuracy = true;
+        state.rtk_age_ms = bestnavu.diffage * 1000;
+        state.rtk_num_sats = bestnavu.svsused;
+
+        if (bestnavu.solstat == 0) // have a solution
+        {
+            switch (bestnavu.postype)
+            {
+                case 16:
+                    state.status = AP_GPS::GPS_OK_FIX_3D;
+                    break;
+                case 17: // psrdiff
+                case 18: // waas
+                case 20: // omnistar
+                case 68: // ppp_converg
+                case 69: // ppp
+                    state.status = AP_GPS::GPS_OK_FIX_3D_DGPS;
+                    break;
+                case 32: // l1 float
+                case 33: // iono float
+                case 34: // narrow float
+                    state.status = AP_GPS::GPS_OK_FIX_3D_RTK_FLOAT;
+                    break;
+                case 48: // l1 int
+                case 50: // narrow int
+                    state.status = AP_GPS::GPS_OK_FIX_3D_RTK_FIXED;
+                    break;
+                case 0: // NONE
+                case 1: // FIXEDPOS
+                case 2: // FIXEDHEIGHT
+                default:
+                    state.status = AP_GPS::NO_FIX;
+                    break;
+            }
+        } else {
+            state.status = AP_GPS::NO_FIX;
+        }
+        state.ground_speed = (float) bestnavu.horspd;
+        state.ground_course = (float) bestnavu.trkgnd;
+        fill_3d_velocity();
+        state.velocity.z = -(float) bestnavu.vertspd;
+        state.have_vertical_velocity = true;
+        
+        _last_vel_time = (uint32_t) nova_msg.header.um_headeru.ms;
+        _new_speed = true;
+        _new_position = true;
+    }
     if (messageid == 99) // bestvel
     {
         const bestvel &bestvelu = nova_msg.data.bestvelu;
@@ -291,7 +424,15 @@ AP_GPS_NOVA::process_message(void)
         state.vdop = (uint16_t) (psrdopu.htdop*100);
         return false;
     }
-    if (messageid == 1657 || messageid == 971) // psrdop
+    if (messageid == 954) // psrdop
+    {
+        const stadop &stadopu = nova_msg.data.stadopu;
+
+        state.hdop = (uint16_t) (stadopu.hdop*100);
+        state.vdop = (uint16_t) (stadopu.vdop*100);
+        return false;
+    }
+    if (messageid == 1657 || messageid == 971) // head
     {
         const heading3a &heading3au = nova_msg.data.heading3au;
         if(heading3au.solstat == 0 )//&& heading3au.postype == 50)
@@ -338,4 +479,5 @@ uint32_t AP_GPS_NOVA::CalculateBlockCRC32(uint32_t length, uint8_t *buffer, uint
     }
     return( crc );
 }
+
 #endif

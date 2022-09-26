@@ -45,11 +45,10 @@ private:
     bool process_message();
     uint32_t CRC32Value(uint32_t icrc);
     uint32_t CalculateBlockCRC32(uint32_t length, uint8_t *buffer, uint32_t crc);
-
     static const uint8_t NOVA_PREAMBLE1 = 0xaa;
     static const uint8_t NOVA_PREAMBLE2 = 0x44;
     static const uint8_t NOVA_PREAMBLE3 = 0x12;
-
+    static const uint8_t UM_PREAMBLE3 = 0xB5;
     // do we have new position information?
     bool            _new_position:1;
     // do we have new speed information?
@@ -59,10 +58,10 @@ private:
     
     uint8_t _init_blob_index = 0;
     uint32_t _init_blob_time = 0;
-    static const char* const _initialisation_blob[21];
+    static const char* const _initialisation_blob[3];
    
     uint32_t crc_error_counter = 0;
-
+    uint32_t nova_crc;
     struct PACKED nova_header
     {
         // 0
@@ -94,6 +93,34 @@ private:
         //26
         uint16_t recvswver;
     };    
+
+     struct PACKED um_header
+    {
+        // 0
+        uint8_t preamble[3];
+        // 3
+        uint8_t cpuidle;
+        // 4
+        uint16_t messageid;
+        //6
+        uint16_t messagelength;
+        //8
+        uint8_t timeref;
+        //9
+        uint8_t timestatus;
+        //10
+        uint16_t wn;
+        //12
+        uint32_t ms;
+        //16
+        uint32_t res;
+        //20
+        uint8_t version;
+        // 21
+        uint8_t leap_sec;
+        //22
+        uint16_t delay_ms;
+    };
 
     struct PACKED psrdop
     {
@@ -132,6 +159,41 @@ private:
         uint8_t galbeisigmask;
         uint8_t gpsglosigmask;
     };
+    struct PACKED bestnav
+    {
+        uint32_t solstat;      ///< Solution status
+        uint32_t postype;      ///< Position type
+        double lat;            ///< latitude (deg)
+        double lng;            ///< longitude (deg)
+        double hgt;            ///< height above mean sea level (m)
+        float undulation;      ///< relationship between the geoid and the ellipsoid (m)
+        uint32_t datumid;      ///< datum id number
+        float latsdev;         ///< latitude standard deviation (m)
+        float lngsdev;         ///< longitude standard deviation (m)
+        float hgtsdev;         ///< height standard deviation (m)
+        // 4 bytes
+        uint8_t stnid[4];      ///< base station id
+        float diffage;         ///< differential position age (sec)
+        float sol_age;         ///< solution age (sec)
+        uint8_t svstracked;    ///< number of satellites tracked
+        uint8_t svsused;       ///< number of satellites used in solution
+        uint8_t resv1;         ///< number of GPS plus GLONASS L1 satellites used in solution
+        uint8_t resv2;
+        uint8_t resv3;
+        uint8_t ext_sol;   ///< number of GPS plus GLONASS L2 satellites used in solution
+        uint8_t bmask;          ///< reserved
+        uint8_t smask;    ///< extended solution status - OEMV and greater only
+        uint32_t v_sol_st;
+        uint32_t vel_type;
+        float latency;
+        float age;
+        double horspd;
+        double trkgnd;
+        double vertspd;
+        float verspd_std;
+        float horspd_std;
+
+    };
     struct PACKED heading3a
         {
             uint32_t solstat;      ///< Solution status
@@ -151,6 +213,21 @@ private:
             uint8_t galieo_beiduo_mask;   ///< number of GPS plus GLONASS L2 satellites used in solution
             uint8_t gps_glonass_mask;          ///< reserved
         };
+    struct PACKED stadop
+        {
+            uint32_t itow;      ///< Solution status
+            float gdop;            ///<
+            float pdop;            ///< 0~360 (deg)
+            float tdop;            ///< ��90��
+            float vdop;      ///<
+            float hdop;      ///<
+            float ndop;         ///
+            float edop;
+            float cutoff;
+            float res;
+            uint16_t prn1;
+            uint16_t prn2;
+        };
     struct PACKED bestvel
     {
         uint32_t solstat;
@@ -169,11 +246,14 @@ private:
         bestpos bestposu;
         psrdop psrdopu;
         heading3a heading3au;
+        stadop stadopu;
+        bestnav bestnavu;
         uint8_t bytes[256];
     };
     
     union PACKED msgheader {
         nova_header nova_headeru;
+        um_header   um_headeru;
         uint8_t data[28];
     };
 
@@ -191,6 +271,13 @@ private:
             CRC2,
             CRC3,
             CRC4,
+            UMHEADERDATA,
+            UMDATA,
+            UMCRC1,
+            UMCRC2,
+            UMCRC3,
+            UMCRC4,
+
         } nova_state;
         
         msgbuffer data;
