@@ -2,7 +2,7 @@
 #include <AP_Common/AP_Common.h>
 #include <AP_Math/AP_Math.h>
 #include "AP_BattMonitor_Analog.h"
-//#include <../ArduCopter/Copter.h>
+#include <../ArduCopter/Copter.h>
 extern const AP_HAL::HAL& hal;
 
 const AP_Param::GroupInfo AP_BattMonitor_Analog::var_info[] = {
@@ -52,6 +52,15 @@ const AP_Param::GroupInfo AP_BattMonitor_Analog::var_info[] = {
     
     // Param indexes must be less than 10 to avoid conflict with other battery monitor param tables loaded by pointer
 
+    // @Param: CURR_PIN
+    // @DisplayName: Battery Current sensing pin
+    // @Description: Sets the analog input pin that should be used for current monitoring.
+    // @Values: -1:Disabled, 3:Pixhawk/Pixracer/Navio2/Pixhawk2_PM1, 4:CubeOrange_PM2/Navigator, 14:Pixhawk2_PM2, 15:CubeOrange, 17:Durandal, 101:PX4-v1
+    // @User: Standard
+    // @RebootRequired: True
+    AP_GROUPINFO("C1_MULT", 7, AP_BattMonitor_Analog, _c1_multiplier, AP_BATT_VOLTDIVIDER_DEFAULT),
+    AP_GROUPINFO("C2_MULT", 8, AP_BattMonitor_Analog, _c2_multiplier, AP_BATT_VOLTDIVIDER_DEFAULT),
+    
     AP_GROUPEND
 };
 
@@ -66,19 +75,33 @@ AP_BattMonitor_Analog::AP_BattMonitor_Analog(AP_BattMonitor &mon,
     
     _volt_pin_analog_source = hal.analogin->channel(_volt_pin);
     _curr_pin_analog_source = hal.analogin->channel(_curr_pin);
-
+    _c1_pin_analog_source = hal.analogin->channel(4);
+    _c2_pin_analog_source = hal.analogin->channel(8);
 }
 
 // read - read the voltage and current
 void
 AP_BattMonitor_Analog::read()
 {
+    float cell[3];
     // this copes with changing the pin at runtime
     _state.healthy = _volt_pin_analog_source->set_pin(_volt_pin);
 
     // get voltage
     _state.voltage = (_volt_pin_analog_source->voltage_average() - _volt_offset) * _volt_multiplier;
+    _state.healthy =_c1_pin_analog_source->set_pin(4);
+    //_state.cell_voltages.cells[0] = _c1_pin_analog_source->voltage_average() ;
+    cell[0] = _c1_pin_analog_source->voltage_average() ;
+    _state.healthy =_c2_pin_analog_source->set_pin(8);
+    //_state.cell_voltages.cells[1] = _c2_pin_analog_source->voltage_average();
+    cell[1] = _c2_pin_analog_source->voltage_average() ;
 
+    _state.healthy =_curr_pin_analog_source->set_pin(13);
+    cell[2] = _curr_pin_analog_source->voltage_average();
+    _state.cell_voltages.cells[0] = cell[0]*1000;
+    _state.cell_voltages.cells[1] = cell[1]*1000;
+    _state.cell_voltages.cells[2] = cell[2]*1000;
+    //gcs().send_text(MAV_SEVERITY_INFO,"c1=%f,c2=%f",cell[0],cell[1]);
     // read current
     if (has_current()) {
         // calculate time since last current read

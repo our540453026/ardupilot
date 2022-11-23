@@ -26,7 +26,8 @@
         "iosfwd": "cpp",
         "ratio": "cpp",
         "*.tcc": "cpp",
-        "cstddef": "cpp"
+        "cstddef": "cpp",
+        "cmath": "cpp"
     },
     // 切换到当前工作目录
     "terminal.integrated.env.windows": {

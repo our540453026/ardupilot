@@ -59,7 +59,7 @@
 #define RATE_POSLLH 1
 #define RATE_STATUS 1
 #define RATE_SOL 1
-#define RATE_TIMEGPS 5
+#define RATE_TIMEGPS 10
 #define RATE_PVT 1
 #define RATE_VELNED 1
 #define RATE_DOP 1

@@ -108,7 +108,7 @@ public:
 
     /// returns true if battery monitor provides current info
     virtual bool has_current() const override;
-
+    bool has_cell_voltages() const override{ return true; }
     virtual void init(void) override {}
 
     static const struct AP_Param::GroupInfo var_info[];
@@ -117,6 +117,9 @@ protected:
 
     AP_HAL::AnalogSource *_volt_pin_analog_source;
     AP_HAL::AnalogSource *_curr_pin_analog_source;
+    AP_HAL::AnalogSource *_c1_pin_analog_source;
+    AP_HAL::AnalogSource *_c2_pin_analog_source;
+
 
     // Parameters
     AP_Float _volt_multiplier;          /// voltage on volt pin multiplied by this to calculate battery voltage
@@ -125,4 +128,6 @@ protected:
     AP_Float _volt_offset;              /// offset voltage that is subtracted from voltage pin before conversion
     AP_Int8  _volt_pin;                 /// board pin used to measure battery voltage
     AP_Int8  _curr_pin;                 /// board pin used to measure battery current
+    AP_Float _c1_multiplier;
+    AP_Float _c2_multiplier;
 };
