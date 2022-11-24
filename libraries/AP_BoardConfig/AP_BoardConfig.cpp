@@ -291,7 +291,7 @@ const AP_Param::GroupInfo AP_BoardConfig::var_info[] = {
     // @Units: ms
     // @User: Advanced
     AP_GROUPINFO("BOOT_DELAY", 20, AP_BoardConfig, _boot_delay_ms, HAL_DEFAULT_BOOT_DELAY),
-
+    AP_GROUPINFO("SD_FORMAT",  24,     AP_BoardConfig, _sdcard_format,  0),
 #if HAL_HAVE_IMU_HEATER
     // @Param: HEAT_P
     // @DisplayName: Board Heater P gain
@@ -325,6 +325,7 @@ const AP_Param::GroupInfo AP_BoardConfig::var_info[] = {
     // @User: Advanced
     // @RebootRequired: True
     AP_GROUPINFO("ALT_CONFIG", 22, AP_BoardConfig, _alt_config, 0),
+    
 #endif // HAL_PIN_ALT_CONFIG
 
 #if HAL_HAVE_IMU_HEATER

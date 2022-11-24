@@ -165,6 +165,9 @@ public:
     static uint8_t get_sdcard_slowdown(void) {
         return _singleton?_singleton->_sdcard_slowdown.get():0;
     }
+    static uint8_t get_sdcard_format(void) {
+        return _singleton?_singleton->_sdcard_format.get():0;
+    }
 #endif
 
     enum board_options {
@@ -300,7 +303,7 @@ private:
 #if CONFIG_HAL_BOARD == HAL_BOARD_CHIBIOS
     AP_Int8 _sdcard_slowdown;
 #endif
-
+    AP_Int8 _sdcard_format;
     AP_Int16 _boot_delay_ms;
 
     AP_Int32 _options;

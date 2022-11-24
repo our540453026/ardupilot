@@ -54,6 +54,9 @@ bool sdcard_init()
     WITH_SEMAPHORE(sem);
 
     uint8_t sd_slowdown = AP_BoardConfig::get_sdcard_slowdown();
+    uint8_t sd_format = AP_BoardConfig::get_sdcard_format();
+    //uint8_t work[FF_MAX_SS];
+    MKFS_PARM defopt = {FM_FAT32, 0, 0, 0};
 #if HAL_USE_SDC
 
 #if STM32_SDC_USE_SDMMC2 == TRUE
@@ -71,7 +74,10 @@ bool sdcard_init()
     if (sdcard_running) {
         sdcard_stop();
     }
-
+    if(sd_format){
+        f_mkfs("/", &defopt, 0, 0);//498606080);
+       
+    }
     const uint8_t tries = 3;
     for (uint8_t i=0; i<tries; i++) {
         sdcconfig.slowdown = sd_slowdown;
@@ -144,6 +150,13 @@ void sdcard_stop(void)
 {
 #ifdef USE_POSIX
     // unmount
+    uint8_t sd_format = AP_BoardConfig::get_sdcard_format();
+    //uint8_t work[FF_MAX_SS];
+    MKFS_PARM defopt = {FM_FAT32, 0, 0, 0};
+    if(sd_format){
+        f_mkfs("/", &defopt, 0, 0);//498606080);   
+          
+    }
     f_mount(nullptr, "/", 1);
 #endif
 #if HAL_USE_SDC

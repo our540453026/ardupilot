@@ -61,17 +61,17 @@ AP_GPS_NOVA::AP_GPS_NOVA(AP_GPS &_gps, AP_GPS::GPS_State &_state,
 
 const char* const AP_GPS_NOVA::_initialisation_blob[20] {
     "\r\n\r\nunlogall\r\n", // cleanup enviroment
-    //"log bestposb ontime 0.1 \r\n", // get bestpos 0 nohold
-   // "log bestvelb ontime 0.1 \r\n", // get bestvel 0 nohold   
-    //"log psrdopb ontime 0.2\r\n", // comnav  STADOPB 0.1
-    //"log headingb ontime 0.1\r\n", // heading
-    "BESTNAVB 0.1\r\n", // poll message, as dop only changes when a sat is dropped/added to the visible list
-    "STADOPB 0.5\r\n", // tersus
+    "log bestposb ontime 0.1 \r\n", // get bestpos 0 nohold
+    "log bestvelb ontime 0.1 \r\n", // get bestvel 0 nohold   
+    "log psrdopb ontime 0.2\r\n", // comnav  STADOPB 0.1
+    "log headingb ontime 0.1\r\n", // heading
+    //"BESTNAVB 0.1\r\n", // poll message, as dop only changes when a sat is dropped/added to the visible list
+    //"STADOPB 0.5\r\n", // tersus
     //"MASK GPS\r\n", // tersus
     //"MASK GLO\r\n", // tersus
     //"MASK GAL\r\n", // tersus
-    "COM COM1 115200\r\n",
-    "unlogall com1 \r\n",
+    //"COM COM1 460800\r\n",
+    //"unlogall com1 \r\n",
     //"LOG COM1 RAWEPHEMB ONTIME 10\r\n",
     //"LOG COM1 RAWALMB ONTIME 10\r\n",
     //"LOG COM1 IONUTCB ONTIME 10\r\n",
@@ -80,12 +80,12 @@ const char* const AP_GPS_NOVA::_initialisation_blob[20] {
     //"LOG COM1 BD3EPHEMB ONTIME 10\r\n",
     //"LOG COM1 TIMEB ONTIME 0.2\r\n",
     //"LOG COM1 RANGECMPB ONTIME 0.2\r\n",
-    "LOG COM1 GPZDA ONTIME 1\r\n",
-    "log COM1 GPGGA ontime 1\r\n",
+    //"LOG COM1 GPZDA ONTIME 1\r\n",
+    //"log COM1 GPGGA ontime 1\r\n",
     //"log COM1 EVENTMARKA ONCHANGED\r\n",//482
     //"log COM1 EVENTALLA ONCHANGED\r\n",//482
-    "log COM1 GPGSV ONTIME 0.5\r\n",//482
-    "log COM1 GPGSA ONTIME 1\r\n",//482
+    //"log COM1 GPGSV ONTIME 0.5\r\n",//482
+    //"log COM1 GPGSA ONTIME 1\r\n",//482
     //"MARKCONTROL MARK1 ENABLE NEGATIVE 600 200\r\n",
     //"markcontrol mark1 enable negative 0 0\r\n",
     //"log  VERSION\r\n",//482
