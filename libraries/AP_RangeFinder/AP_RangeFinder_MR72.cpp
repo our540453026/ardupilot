@@ -52,6 +52,8 @@ bool AP_RangeFinder_MR72::detect(uint8_t serial_instance)
 bool AP_RangeFinder_MR72::get_reading(uint16_t &reading_cm)
 {
     uint8_t c;
+    float sum_cm = 0;
+    uint16_t count = 0;
     if (uart == nullptr) {
         return false;
     }
@@ -94,9 +96,11 @@ bool AP_RangeFinder_MR72::get_reading(uint16_t &reading_cm)
 
                     if((uint8_t)crc_crc8(data_msg.data.bytes,MR72_DATA_LENGHT)==c)
                     {
-                        reading_cm = swapInt16(data_msg.data.three_sec.sector_2);
-
-                        return true;
+                        //reading_cm = swapInt16(data_msg.data.three_sec.sector_2);
+                        uint16_t dist = swapInt16(data_msg.data.three_sec.sector_2);
+                        sum_cm += dist;
+                        count++;
+                        //return true;
                     }
                     else
                     {
@@ -110,6 +114,11 @@ bool AP_RangeFinder_MR72::get_reading(uint16_t &reading_cm)
         }
 
     }
+    if (count > 0) {
+        // return average distance of readings
+        reading_cm = sum_cm  / count;
+        return true;
+    }
     return false; // no readings so return false
 }
 /* 
@@ -118,12 +127,12 @@ bool AP_RangeFinder_MR72::get_reading(uint16_t &reading_cm)
 void AP_RangeFinder_MR72::update(void)
 {
     if (get_reading(state.distance_cm)) {
-        SendHz++;
+        /*SendHz++;
         if(SendHz >=100)
         {
             SendHz = 0;
             gcs().send_text(MAV_SEVERITY_INFO,"sec1=%d,sec2=%d,sec3=%d",swapInt16(data_msg.data.three_sec.sector_1),state.distance_cm,swapInt16(data_msg.data.three_sec.sector_3));
-        }
+        }*/
         // update range_valid state based on distance measured
         state.last_reading_ms = AP_HAL::millis();
         update_status();

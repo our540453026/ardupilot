@@ -28,7 +28,15 @@ public:
         BattMonitor_TYPE_SUI3                       = 13,
         BattMonitor_TYPE_SUI6                       = 14,
         BattMonitor_TYPE_NeoDesign                  = 15,
-        BattMonitor_TYPE_BMS                        = 16,
+        BattMonitor_TYPE_MAXEDD                     = 16,
+        BattMonitor_TYPE_GENERATOR_ELEC             = 17,
+        BattMonitor_TYPE_GENERATOR_FUEL             = 18,
+        BattMonitor_TYPE_Rotoye                     = 19,
+        BattMonitor_TYPE_MPPT_PacketDigital         = 20,
+        BattMonitor_TYPE_INA2XX                     = 21,
+        BattMonitor_TYPE_LTC2946                    = 22,
+        BattMonitor_TYPE_Torqeedo                   = 23,
+        BattMonitor_TYPE_BMS                        = 24,
     };
 
     // low voltage sources (used for BATT_LOW_TYPE parameter)
