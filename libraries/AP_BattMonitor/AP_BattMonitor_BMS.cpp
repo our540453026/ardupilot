@@ -29,7 +29,7 @@ AP_BattMonitor_BMS::read()
     _state.consumed_mah = copter.serial_concentrator.bms_state.capacity_remaining;
     _state.last_time_micros = copter.serial_concentrator.bms_state.time_s;
     _state.temperature = copter.serial_concentrator.bms_state.bat_temp1;
-    _state.temperature_time = AP_HAL::millis();
+    _state.last_time_micros = AP_HAL::millis();
     for(int i=0;i<10;i++)
     {
         _state.cell_voltages.cells[i] = copter.serial_concentrator.bms_state.cell_vot[i];

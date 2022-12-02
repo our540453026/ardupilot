@@ -57,7 +57,7 @@ const char* const AP_GPS_NOVA::_initialisation_blob[7] {
     "log bestvelb ontime 0.2 0 nohold\r\n", // get bestvel
     "log psrdopb onchanged\r\n", // tersus
     "log psrdopb ontime 0.2\r\n", // comnav
-    "log headingb ontime 1\r\n", //
+    //"log headingb ontime 1\r\n", //
     "log psrdopb\r\n" // poll message, as dop only changes when a sat is dropped/added to the visible list
 };
 
@@ -132,27 +132,33 @@ AP_GPS_NOVA::parse(uint8_t temp)
             if (nova_msg.read >= sizeof(nova_msg.header.data)) {
                 Debug("parse header overflow length=%u\n", (unsigned)nova_msg.read);
                 nova_msg.nova_state = nova_msg_parser::PREAMBLE1;
+                //gcs().send_text(MAV_SEVERITY_INFO,"nove1");
                 break;
             }
+            
             nova_msg.header.data[nova_msg.read] = temp;
             nova_msg.read++;
             if (nova_msg.read >= nova_msg.header.nova_headeru.headerlength)
             {
                 nova_msg.nova_state = nova_msg_parser::DATA;
+                //gcs().send_text(MAV_SEVERITY_INFO,"nove2");
             }
             break;
         case nova_msg_parser::DATA:
             if (nova_msg.read >= sizeof(nova_msg.data)) {
                 Debug("parse data overflow length=%u msglength=%u\n", (unsigned)nova_msg.read,nova_msg.header.nova_headeru.messagelength);
                 nova_msg.nova_state = nova_msg_parser::PREAMBLE1;
+               // gcs().send_text(MAV_SEVERITY_INFO,"nove3");
                 break;
             }
+            
             nova_msg.data.bytes[nova_msg.read - nova_msg.header.nova_headeru.headerlength] = temp;
             nova_msg.read++;
             if (nova_msg.read >= (nova_msg.header.nova_headeru.messagelength + nova_msg.header.nova_headeru.headerlength))
             {
                 Debug("NOVA DATA exit\n");
                 nova_msg.nova_state = nova_msg_parser::CRC1;
+                //gcs().send_text(MAV_SEVERITY_INFO,"nove4");
             }
             break;
         case nova_msg_parser::CRC1:
@@ -182,6 +188,7 @@ AP_GPS_NOVA::parse(uint8_t temp)
             {
                 Debug("crc failed");
                 crc_error_counter++;
+                gcs().send_text(MAV_SEVERITY_INFO,"nove crc fail");
             }
             break;
     }
@@ -218,7 +225,7 @@ AP_GPS_NOVA::process_message(void)
         state.have_vertical_accuracy = true;
         state.rtk_age_ms = bestposu.diffage * 1000;
         state.rtk_num_sats = bestposu.svsused;
-
+        //gcs().send_text(MAV_SEVERITY_INFO,"sol=%d,type=%d",bestposu.solstat,bestposu.postype);
         if (bestposu.solstat == 0) // have a solution
         {
             switch (bestposu.postype)
@@ -239,6 +246,7 @@ AP_GPS_NOVA::process_message(void)
                     state.status = AP_GPS::GPS_OK_FIX_3D_RTK_FLOAT;
                     break;
                 case 48: // l1 int
+                case 49: // l1 int
                 case 50: // narrow int
                     state.status = AP_GPS::GPS_OK_FIX_3D_RTK_FIXED;
                     break;
@@ -253,6 +261,7 @@ AP_GPS_NOVA::process_message(void)
         else
         {
             state.status = AP_GPS::NO_FIX;
+            //gcs().send_text(MAV_SEVERITY_INFO,"sol=%d,type=%d",bestposu.solstat,bestposu.postype);
         }
         
         _new_position = true;

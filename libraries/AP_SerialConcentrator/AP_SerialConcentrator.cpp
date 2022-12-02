@@ -85,6 +85,7 @@ bool AP_SerialConcentrator::update(void)
     {
         data = _port->read();
         parse(data);
+        //gcs().send_text(MAV_SEVERITY_CRITICAL,"serialdata: %x", data);
         EnMesQueue(&usart_rx_fifo,data);
     }
 
@@ -179,6 +180,12 @@ bool AP_SerialConcentrator::parse(uint8_t temp)
                     data_msg.rec_state = data_msg_parser::COMPTYPE;
                     data_msg.length += temp;
                     g_crc_val += temp;
+                    if(data_msg.length >= 512) //
+                    {
+                        data_msg.rec_state = data_msg_parser::PREAMBLE1;
+                        //gcs().send_text(MAV_SEVERITY_INFO,"bms_len=%d",data_msg.length);
+                    }
+
                     break;
                 case data_msg_parser::COMPTYPE:
                     data_msg.comptype = temp;
@@ -220,7 +227,7 @@ bool AP_SerialConcentrator::parse(uint8_t temp)
                     }
                     else
                     {
-                        //gcs().send_text(MAV_SEVERITY_INFO,"bms_error");
+                        gcs().send_text(MAV_SEVERITY_INFO,"bms_error");
                         return false;
                     }
                     break;
@@ -254,6 +261,7 @@ bool AP_SerialConcentrator::Data_Message_Process(void)
             bms_state.pcb_temp2 = data_msg.data.bms.pcb_temp2;
             bms_state.type = data_msg.data.bms.type;
             bms_state.time_s = AP_HAL::micros();
+            //gcs().send_text(MAV_SEVERITY_INFO,"bms=%d",bms_state.voltages);
             break;
         case ACK_MSG_ID:
             Tx_urgent_statue = true;

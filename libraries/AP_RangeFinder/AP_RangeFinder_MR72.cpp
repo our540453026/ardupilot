@@ -138,6 +138,7 @@ void AP_RangeFinder_MR72::update(void)
         update_status();
     } else if (AP_HAL::millis() - state.last_reading_ms > 200) {
         set_status(RangeFinder::RangeFinder_NoData);
+        gcs().send_text(MAV_SEVERITY_INFO,"sec1=%d,sec2=%d,sec3=%d",swapInt16(data_msg.data.three_sec.sector_1),state.distance_cm,swapInt16(data_msg.data.three_sec.sector_3));
     }
     //gcs().send_text(MAV_SEVERITY_CRITICAL,"secerror=%d",state.distance_cm);
 }
