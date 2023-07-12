@@ -17,7 +17,7 @@
 #include "AP_BattMonitor_LTC2946.h"
 #include "AP_BattMonitor_Torqeedo.h"
 #include "AP_BattMonitor_FuelLevel_Analog.h"
-
+#include "AP_BattMonitor_BMS.h"
 #include <AP_HAL/AP_HAL.h>
 
 #if HAL_ENABLE_LIBUAVCAN_DRIVERS
@@ -244,6 +244,9 @@ AP_BattMonitor::init()
             case Type::ANALOG_VOLTAGE_ONLY:
             case Type::ANALOG_VOLTAGE_AND_CURRENT:
                 drivers[instance] = new AP_BattMonitor_Analog(*this, state[instance], _params[instance]);
+                break;
+            case Type::BattMonitor_TYPE_BMS:
+                drivers[instance] = new AP_BattMonitor_BMS(*this, state[instance], _params[instance]);
                 break;
 #if AP_BATTMON_SMBUS_ENABLE
             case Type::SOLO:

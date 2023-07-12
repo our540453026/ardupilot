@@ -77,7 +77,7 @@ public:
 #if HAL_EXTERNAL_AHRS_ENABLED
     virtual void handle_external(const AP_ExternalAHRS::mag_data_message_t &pkt) {}
 #endif
-    
+    virtual void handle_serial(int16_t mag_x,int16_t mag_y,int16_t mag_z) {}
 protected:
 
     /*

@@ -194,14 +194,14 @@ public:
         k_param_arming,
 
         k_param_logger = 253, // 253 - Logging Group
-
+        k_param_avoid_distan_cm = 254,
         k_param_vehicle = 257, // vehicle common block of parameters
 
         // the k_param_* space is 9-bits in size
     };
 
     AP_Int16        format_version;
-
+    AP_Int16        avoid_distan_cm,
     // Telemetry control
     //
     AP_Int16        sysid_this_mav;

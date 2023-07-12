@@ -37,7 +37,8 @@
 #include "AP_Compass.h"
 #include "Compass_learn.h"
 #include <stdio.h>
-
+#include "AP_Compass_Serial.h"
+#include <../ArduCopter/Copter.h>
 extern const AP_HAL::HAL& hal;
 
 #ifndef AP_COMPASS_ENABLE_DEFAULT
@@ -1387,7 +1388,7 @@ void Compass::_detect_backends(void)
         break;
     }
 #endif
-
+    ADD_BACKEND(DRIVER_SERIAL1, new AP_Compass_Serial(1));
 
 #if HAL_ENABLE_LIBUAVCAN_DRIVERS
     if (_driver_enabled(DRIVER_UAVCAN)) {
@@ -2032,7 +2033,17 @@ bool Compass::have_scale_factor(uint8_t i) const
     }
     return true;
 }
-
+void Compass::handle_serial(int16_t mag_x,int16_t mag_y,int16_t mag_z)
+{
+    if (!_driver_enabled(DRIVER_SERIAL1)) {
+        return;
+    }
+    
+    for (uint8_t i=0; i<_backend_count; i++) {
+        _backends[i]->handle_serial(mag_x,mag_y,mag_z);
+    }
+    
+}
 #if HAL_MSP_COMPASS_ENABLED
 void Compass::handle_msp(const MSP::msp_compass_data_message_t &pkt)
 {

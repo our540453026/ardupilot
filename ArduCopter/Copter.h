@@ -69,7 +69,8 @@
 #include <AC_Sprayer/AC_Sprayer.h>          // Crop sprayer library
 #include <AP_ADSB/AP_ADSB.h>                // ADS-B RF based collision avoidance module library
 #include <AP_Proximity/AP_Proximity.h>      // ArduPilot proximity sensor library
-
+#include <AP_SerialConcentrator/AP_SerialConcentrator.h> 
+#include <AP_SerialConcentrator/AP_SerialCompass.h>
 // Configuration
 #include "defines.h"
 #include "config.h"
@@ -228,7 +229,9 @@ public:
     friend class ModeTurtle;
 
     Copter(void);
-
+    AP_SerialConcentrator serial_concentrator;
+    AP_SerialCompass serial_compass;
+    uint16_t test_send_cont=0;
 private:
 
     // key aircraft parameters passed to multiple libraries
@@ -813,7 +816,7 @@ private:
 
     // standby.cpp
     void standby_update();
-
+    void Log_Write_MotBattBMS();
     // Log.cpp
     void Log_Write_Control_Tuning();
     void Log_Write_Attitude();
