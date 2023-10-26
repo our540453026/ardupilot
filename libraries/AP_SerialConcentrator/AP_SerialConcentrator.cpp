@@ -158,10 +158,14 @@ bool AP_SerialConcentrator::update(void)
 }
 void AP_SerialConcentrator::send_data(uint8_t *buffer,uint8_t size)
 {
+    if(_port !=NULL)
     _port->write(buffer, size);
 }
 void AP_SerialConcentrator::send_gimbal_data(gimbal_t gimbal)
 {
+    uint8_t cam_recoder_on[17]={0xAB ,0xCB ,0x00 ,0x0B ,0x01 ,0x02 ,0x02 ,0x01 ,0x02 ,0x03 ,0x04 ,0x03 ,0x08 ,0x00 ,0x25 ,0xEE ,0xFF};
+    uint8_t cam_recoder_off[17]={0xAB ,0xCB ,0x00 ,0x0b ,0x03 ,0x02 ,0x02 ,0x01 ,0x02 ,0x03 ,0x04 ,0x03 ,0x09 ,0x00 ,0x28 ,0xEE ,0xFF};
+    //uint8_t cam_shutter[17]={0xAB ,0xCB ,0x00 ,0x0b ,0x03 ,0x02 ,0x02 ,0x01 ,0x02 ,0x03 ,0x04 ,0x01 ,0x06 ,0x00 ,0x23 ,0xEE ,0xFF };
     uint8_t buf[40];
 	uint8_t n;
     uint16_t gim_crc;
@@ -196,7 +200,28 @@ void AP_SerialConcentrator::send_gimbal_data(gimbal_t gimbal)
     gim_crc = crcSum(&buf[2],n-2);
     buf[n++] = (uint8_t)(gim_crc>>8);
 	buf[n++] = (uint8_t)(gim_crc);
-    _port->write(buf, n);
+    if(_port !=NULL)
+    {
+        _port->write(buf, n);
+        switch(gimbal.cam_cmd)
+        {
+            case 1:
+            //    _port->write(cam_shutter, 17);               
+                break;
+            case 4:
+                _port->write(cam_recoder_on, 17);
+                break;
+            case 5:
+                _port->write(cam_recoder_off, 17);
+                break;
+            default:
+                break;
+        }
+        
+        
+    }
+    
+
     //gcs().send_text(MAV_SEVERITY_INFO,"gimbalok=%d",gimbal.pitch);
 }
 
@@ -340,6 +365,7 @@ bool AP_SerialConcentrator::Data_Message_Process(void)
             bms_state.voltages = swapInt16(data_msg.data.bms.voltages);
             bms_state.charge_count = swapInt16(data_msg.data.bms.charge_count);
             bms_state.capacity_remaining = swapInt16(data_msg.data.bms.capacity_remaining);
+            bms_state.capacity_full = swapInt16(data_msg.data.bms.capacity_full);
             bms_state.current_battery = swapInt16(data_msg.data.bms.current_battery);
             bms_state.cycle = swapInt16(data_msg.data.bms.cycle);
             bms_state.discharge_count = swapInt16(data_msg.data.bms.discharge_count);
@@ -434,6 +460,9 @@ bool AP_SerialConcentrator::Data_Message_Process(void)
                         gcs().send_text(MAV_SEVERITY_INFO,"gim_ack");
                     }
                     break;
+                case CAMERA_CTR_MSG_ID:
+                    gimbal_state.cam_cmd =0;
+                    gcs().send_text(MAV_SEVERITY_INFO,"cam_ack=%d",gimbal_state.Cam_num);
                 default:
                     break;
 

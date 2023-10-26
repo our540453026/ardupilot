@@ -32,6 +32,7 @@ def build(bld):
             'AC_AutoTune',
             'AP_KDECAN',
             'AP_SerialConcentrator',
+            'AP_OpenMV',
         ],
     )
 

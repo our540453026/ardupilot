@@ -33,13 +33,25 @@ void Copter::userhook_50Hz()
                     continue;
                 }
 
-                if(get_mode() == 3 && ahrs_view->groundspeed() > 0.5 && dist_array.distance[i]>0.2 && dist_array.distance[i] < g.avoid_distan_cm)
+                if(get_mode() == 3 && ahrs_view->groundspeed() > 0.5 && dist_array.distance[i]>0.2 && dist_array.distance[i] < g.avoid_distan_m)
                 {               
                     //test_dis_home = tof_val;//home_distance()/100.0;
                     //test_dis_tof = dist_array.distance[i] * 100.0f;
                     //proximity_bitmask_val = i;
                    // set_mode_SmartRTL_or_RTL(ModeReason::AUTO_RTL_EXIT);
-                    set_mode(Mode::Number::LOITER, ModeReason::AVOIDANCE);
+                   if(g.avoid_behavior==1)
+                   {
+                        set_mode(Mode::Number::RTL, ModeReason::AVOIDANCE);
+                   }
+                   else if(g.avoid_behavior==2)
+                   {
+                        set_mode(Mode::Number::SMART_RTL, ModeReason::AVOIDANCE);
+                   }
+                   else
+                   {
+                        set_mode(Mode::Number::LOITER, ModeReason::AVOIDANCE);
+                   }
+                    
                     
                 }              
             }
@@ -53,6 +65,7 @@ void Copter::userhook_MediumLoop()
 {
     // put your 10Hz code here
     serial_concentrator.update();
+    openmv.update();
 }
 #endif
 

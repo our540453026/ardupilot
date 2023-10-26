@@ -13,7 +13,7 @@
 
 #define FW_MAJOR 4
 #define FW_MINOR 3
-#define FW_PATCH 7
+#define FW_PATCH 17
 #define FW_TYPE FIRMWARE_VERSION_TYPE_OFFICIAL
 
 #include <AP_Common/AP_FWVersionDefine.h>

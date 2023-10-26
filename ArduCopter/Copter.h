@@ -71,6 +71,7 @@
 #include <AP_Proximity/AP_Proximity.h>      // ArduPilot proximity sensor library
 #include <AP_SerialConcentrator/AP_SerialConcentrator.h> 
 #include <AP_SerialConcentrator/AP_SerialCompass.h>
+#include <AP_OpenMV/AP_OpenMV.h>
 // Configuration
 #include "defines.h"
 #include "config.h"
@@ -231,6 +232,7 @@ public:
     Copter(void);
     AP_SerialConcentrator serial_concentrator;
     AP_SerialCompass serial_compass;
+    AP_OpenMV openmv;
     uint16_t test_send_cont=0;
 private:
 

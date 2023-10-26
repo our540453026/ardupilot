@@ -95,8 +95,233 @@ void ModeGuided::run()
         angle_control_run();
         break;
     }
+    Openmv_run();
  }
+ void ModeGuided::Openmv_run()
+{
+    static uint32_t last_new_data_time_ms = 0;
+    static Vector3f target = Vector3f(0, 0, 0);
+    static uint32_t last_set_pos_target_time_ms = 0;
+    static bool update_flag=false;//解决初始化目标坐标
+    static float yaw_deg=0;
+    static float cur_speed=20.0;
+    if(last_new_data_time_ms == 0)
+    {
+        copter.openmv.openmv_data[0].active =1;
+        copter.openmv.openmv_data[3].active=0;
+        copter.openmv.openmv_data[0].x=319;
+        copter.openmv.openmv_data[0].y=209;
+        copter.openmv.openmv_data[1].x=480;
+        copter.openmv.openmv_data[1].y=187;
+        copter.openmv.openmv_data[2].x=350;
+        copter.openmv.openmv_data[2].y=428;
+        copter.openmv.openmv_data[3].x=515;
+        copter.openmv.openmv_data[3].y=403;
+        copter.openmv.openmv_data[5].x=415;
+        copter.openmv.openmv_data[5].y=304;
+    }
+    if(millis() - last_new_data_time_ms > 2000)
+    {
+        if(copter.openmv.openmv_data[0].active && copter.openmv.openmv_data[3].active==0)
+        {
+            copter.openmv.openmv_data[0].active=0;
+            int16_t target_body_frame_x = (int16_t)copter.openmv.openmv_data[0].x - 320;  // QQVGA 160 * 120
+            int16_t target_body_frame_y = 240 - copter.openmv.openmv_data[0].y ;
+            //target_body_frame_y = 0- target_body_frame_y;
+            float angle_x_deg = target_body_frame_x * 24.0f / 320.0f;
+            float angle_y_deg = target_body_frame_y * 24.0f / 240.0f;
+            Vector3f v = Vector3f(tanf(radians(angle_y_deg)), tanf(radians(angle_x_deg)),0.0 );
+            v = v / v.length();
+            const Matrix3f &rotMat = copter.ahrs.get_rotation_body_to_ned();
+            v = rotMat * v;
+            target = v * 100.0f;
+            //target.z = -target.z;
+            Vector3f current_pos = inertial_nav.get_position_neu_cm();
+            target = target + current_pos;
+            //target.x = current_pos.x - target.x;
+            //target.y = current_pos.y - target.y;
+            target.z= current_pos.z;
+            yaw_deg = wrap_360(degrees(copter.ahrs.get_yaw()))*100.0f;;
+            //gcs().send_text(MAV_SEVERITY_CRITICAL, "left up cur,x=%f,y=%f,z=%f",current_pos.x,current_pos.y,current_pos.z);
+            //target = inertial_nav.get_position_neu_cm();
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "left up,x=%f,y=%f,z=%f",target.x,target.y,target.z);
+           // target.x += 100;
+            //target.y -= 100;
+            last_new_data_time_ms = millis();
+            update_flag=true;
+            cur_speed=20;
 
+        }
+        else if(copter.openmv.openmv_data[1].active && copter.openmv.openmv_data[2].active==0)
+        {
+            copter.openmv.openmv_data[1].active=0;
+            int16_t target_body_frame_x = (int16_t)copter.openmv.openmv_data[1].x - 320;  // QQVGA 160 * 120
+            int16_t target_body_frame_y = 240 - copter.openmv.openmv_data[1].y ;
+            //target_body_frame_y = 0- target_body_frame_y;
+            float angle_x_deg = target_body_frame_x * 24.0f / 320.0f;
+            float angle_y_deg = target_body_frame_y * 24.0f / 240.0f;
+            Vector3f v = Vector3f(tanf(radians(angle_y_deg)), tanf(radians(angle_x_deg)),0.0 );
+            v = v / v.length();
+            const Matrix3f &rotMat = copter.ahrs.get_rotation_body_to_ned();
+            v = rotMat * v;
+            target = v * 100.0f;
+            //target.z = -target.z;
+            Vector3f current_pos = inertial_nav.get_position_neu_cm();
+            target = target + current_pos;
+            target.z= current_pos.z;
+            yaw_deg = wrap_360(degrees(copter.ahrs.get_yaw()))*100.0f;
+            //gcs().send_text(MAV_SEVERITY_CRITICAL, "right up2 cur,x=%f,y=%f,z=%f",current_pos.x,current_pos.y,current_pos.z);
+            //target = inertial_nav.get_position_neu_cm();
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "right up2,x=%f,y=%f,z=%f",target.x,target.y,target.z);
+            last_new_data_time_ms = millis();
+            update_flag=true;
+            cur_speed=20;
+        }
+        else if(copter.openmv.openmv_data[2].active && copter.openmv.openmv_data[1].active==0)
+        {
+            copter.openmv.openmv_data[2].active=0;
+            int16_t target_body_frame_x = (int16_t)copter.openmv.openmv_data[2].x - 320;  // QQVGA 160 * 120
+            int16_t target_body_frame_y = 240 - copter.openmv.openmv_data[2].y ;
+            float angle_x_deg = target_body_frame_x * 24.0f / 320.0f;
+            float angle_y_deg = target_body_frame_y * 24.0f / 240.0f;
+            Vector3f v = Vector3f(tanf(radians(angle_y_deg)), tanf(radians(angle_x_deg)),0.0 );
+            v = v / v.length();
+            const Matrix3f &rotMat = copter.ahrs.get_rotation_body_to_ned();
+            v = rotMat * v;
+            target = v * 100.0f;
+            //target.z = -target.z;
+            Vector3f current_pos = inertial_nav.get_position_neu_cm();
+            target = target + current_pos;
+            target.z= current_pos.z;
+            yaw_deg = wrap_360(degrees(copter.ahrs.get_yaw()))*100.0f;
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "left down,x=%f,y=%f,z=%f",target.x,target.y,target.z);
+            last_new_data_time_ms = millis();
+            update_flag=true;
+            cur_speed=20;
+        }
+        else if(copter.openmv.openmv_data[3].active && copter.openmv.openmv_data[0].active==0)
+        {
+            copter.openmv.openmv_data[3].active=0;
+            int16_t target_body_frame_x = (int16_t)copter.openmv.openmv_data[3].x - 320;  // QQVGA 160 * 120
+            int16_t target_body_frame_y = 240 - copter.openmv.openmv_data[3].y ;
+            float angle_x_deg = target_body_frame_x * 24.0f / 320.0f;
+            float angle_y_deg = target_body_frame_y * 24.0f / 240.0f;
+            Vector3f v = Vector3f(tanf(radians(angle_y_deg)), tanf(radians(angle_x_deg)),0.0 );
+            v = v / v.length();
+            const Matrix3f &rotMat = copter.ahrs.get_rotation_body_to_ned();
+            v = rotMat * v;
+            target = v * 100.0f;
+            //target.z = -target.z;
+            Vector3f current_pos = inertial_nav.get_position_neu_cm();
+            target = target + current_pos;
+            target.z= current_pos.z;
+            yaw_deg = wrap_360(degrees(copter.ahrs.get_yaw()))*100.0f;
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "right down,x=%f,y=%f,z=%f",target.x,target.y,target.z);
+            last_new_data_time_ms = millis();
+            update_flag=true;
+            cur_speed=20;
+        }
+        else if(copter.openmv.openmv_data[0].active && copter.openmv.openmv_data[1].active && copter.openmv.openmv_data[2].active && copter.openmv.openmv_data[3].active  && copter.openmv.openmv_data[5].active )
+        {
+            copter.openmv.openmv_data[0].active=0;
+            copter.openmv.openmv_data[1].active=0;
+            copter.openmv.openmv_data[2].active=0;
+            copter.openmv.openmv_data[3].active=0;
+            copter.openmv.openmv_data[5].active=0;
+            uint16_t len_x = abs(((476/(copter.openmv.openmv_data[1].x-copter.openmv.openmv_data[0].x))*(copter.openmv.openmv_data[5].x-320)));
+            uint16_t len_y= abs(((625/(copter.openmv.openmv_data[3].y-copter.openmv.openmv_data[0].y))*(copter.openmv.openmv_data[5].y-240)));
+            if(len_x <100 &&len_y<100)//mm
+            {
+                set_mode(Mode::Number::LOITER, ModeReason::AVOIDANCE);
+            }
+            int16_t target_body_frame_x = (int16_t)copter.openmv.openmv_data[5].x - 320;  // QQVGA 160 * 120
+            int16_t target_body_frame_y = 240 - copter.openmv.openmv_data[5].y ;
+            float angle_x_deg = target_body_frame_x * 24.0f / 320.0f;
+            float angle_y_deg = target_body_frame_y * 24.0f / 240.0f;
+            Vector3f v = Vector3f(tanf(radians(angle_y_deg)), tanf(radians(angle_x_deg)),0.0 );
+            v = v / v.length();
+            const Matrix3f &rotMat = copter.ahrs.get_rotation_body_to_ned();
+            v = rotMat * v;
+            target = v * 20;
+            Vector3f current_pos = inertial_nav.get_position_neu_cm();
+            target = target + current_pos;
+            target.z= current_pos.z;
+            yaw_deg = wrap_360(degrees(copter.ahrs.get_yaw()))*100.0f;
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "mid pos,x=%f,y=%f,z=%f",target.x,target.y,target.z);
+            last_new_data_time_ms = millis();
+            update_flag=true;
+            cur_speed=10;
+        }
+        else if(copter.openmv.openmv_data[0].active && copter.openmv.openmv_data[1].active && copter.openmv.openmv_data[2].active && copter.openmv.openmv_data[3].active )
+        {
+            copter.openmv.openmv_data[0].active=0;
+            copter.openmv.openmv_data[1].active=0;
+            copter.openmv.openmv_data[2].active=0;
+            copter.openmv.openmv_data[3].active=0;
+            copter.openmv.openmv_data[5].x=(copter.openmv.openmv_data[1].x-copter.openmv.openmv_data[0].x)/2+copter.openmv.openmv_data[0].x;
+            copter.openmv.openmv_data[5].y=(copter.openmv.openmv_data[3].y-copter.openmv.openmv_data[0].y)/2+copter.openmv.openmv_data[0].y;
+            //测试
+            int16_t target_body_frame_x = (int16_t)copter.openmv.openmv_data[5].x - 320;  // QQVGA 160 * 120
+            int16_t target_body_frame_y = 240 - copter.openmv.openmv_data[5].y ;
+            Vector3f v = Vector3f(target_body_frame_y, target_body_frame_x,1.0 );
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "pos_v,x=%f,y=%f,z=%f",v.x,v.y,v.z);
+            const Matrix3f &rotMat = copter.ahrs.get_rotation_body_to_ned();
+            v = rotMat * v;
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "pos_r,x=%f,y=%f,z=%f",v.x,v.y,v.z);
+            target = v ;
+            Vector3f current_pos = inertial_nav.get_position_neu_cm();
+            
+            target = target + current_pos;
+            target.z= current_pos.z;
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "pos_vr,x=%f,y=%f,z=%f",target.x,target.y,target.z);
+            //
+            /*
+            uint16_t len_x = abs(((476/(copter.openmv.openmv_data[1].x-copter.openmv.openmv_data[0].x))*(copter.openmv.openmv_data[5].x-320)));
+            uint16_t len_y=  abs(((625/(copter.openmv.openmv_data[3].y-copter.openmv.openmv_data[0].y))*(copter.openmv.openmv_data[5].y-240)));
+            if(len_x <100 &&len_y<100)//mm
+            {
+                set_mode(Mode::Number::LOITER, ModeReason::AVOIDANCE);
+            }
+            int16_t target_body_frame_x = (int16_t)copter.openmv.openmv_data[5].x - 320;  // QQVGA 160 * 120
+            int16_t target_body_frame_y = 240 - copter.openmv.openmv_data[5].y ;
+            float angle_x_deg = target_body_frame_x * 24.0f / 320.0f;
+            float angle_y_deg = target_body_frame_y * 24.0f / 240.0f;
+            Vector3f v = Vector3f(tanf(radians(angle_y_deg)), tanf(radians(angle_x_deg)),0.0 );
+            v = v / v.length();
+            const Matrix3f &rotMat = copter.ahrs.get_rotation_body_to_ned();
+            v = rotMat * v;
+            target = v * 50;
+            Vector3f current_pos = inertial_nav.get_position_neu_cm();
+            target = target + current_pos;
+            target.z= current_pos.z;
+            yaw_deg = wrap_360(degrees(copter.ahrs.get_yaw()))*100.0f;
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "mid4 pos,x=%f,y=%f,z=%f",target.x,target.y,target.z);
+            last_new_data_time_ms = millis();
+            update_flag=true;
+            cur_speed=10;
+            */
+        }
+        else
+        {
+            target = inertial_nav.get_position_neu_cm();
+            if(target.z >150)
+            {
+                target.z -= 10;
+            }
+            last_new_data_time_ms = millis();
+            update_flag=true;
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "land pos,1=%d,2=%d,3=%d,4=%d",copter.openmv.openmv_data[0].active,copter.openmv.openmv_data[1].active,copter.openmv.openmv_data[2].active,copter.openmv.openmv_data[3].active);
+        }
+    }
+    if((millis() - last_set_pos_target_time_ms > 200) && update_flag) {  // call in 2Hz
+        gcs().send_text(MAV_SEVERITY_CRITICAL, "target_pos,x=%f,y=%f,z=%f",target.x,target.y,target.z);
+        copter.mode_guided.set_destination(target, true, yaw_deg, false, 0.0, false);
+        //yaw_deg= (uint16_t)(360.0f - degrees(AP::ahrs().get_yaw()))*100.0f;
+        //auto_yaw.set_mode(AUTO_YAW_FIXED);
+        set_speed_xy(cur_speed);
+        last_set_pos_target_time_ms= millis();
+    }
+}   
 bool ModeGuided::allows_arming(AP_Arming::Method method) const
 {
     // always allow arming from the ground station

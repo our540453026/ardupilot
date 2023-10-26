@@ -26,9 +26,11 @@ AP_BattMonitor_BMS::read()
     // get voltage
     _state.voltage = copter.serial_concentrator.bms_state.voltages/1000.0;
     _state.current_amps = copter.serial_concentrator.bms_state.current_battery/1000.0;
-    _state.consumed_mah = copter.serial_concentrator.bms_state.capacity_remaining;
+    _state.consumed_mah = copter.serial_concentrator.bms_state.capacity_full-copter.serial_concentrator.bms_state.capacity_remaining;//剩余容量
+    _state.consumed_wh = copter.serial_concentrator.bms_state.capacity_full;  //总容量
     _state.last_time_micros = copter.serial_concentrator.bms_state.time_s;
     _state.temperature = copter.serial_concentrator.bms_state.bat_temp1;
+    _state.resistance = copter.serial_concentrator.bms_state.id;
     _state.temperature_time = AP_HAL::millis();
     for(int i=0;i<12;i++)
     {

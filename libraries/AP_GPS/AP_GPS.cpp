@@ -388,10 +388,10 @@ const AP_Param::GroupInfo AP_GPS::var_info[] = {
     // @DisplayName: Second DroneCAN GPS NODE ID
     // @Description: GPS Node id for second GPS. If 0 the gps will be automatically selected on a second-come-second-GPS basis.
     // @User: Advanced
-    AP_GROUPINFO("2_CAN_OVRIDE", 31, AP_GPS, _override_node_id[1], 0),
+    //AP_GROUPINFO("2_CAN_OVRIDE", 31, AP_GPS, _override_node_id[1], 0),
 #endif // GPS_MAX_RECEIVERS > 1
 #endif // HAL_ENABLE_LIBUAVCAN_DRIVERS
-
+    AP_GROUPINFO("_ALT_OFFSET", 31, AP_GPS, alt_offset, 0.0),
     AP_GROUPEND
 };
 

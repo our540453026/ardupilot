@@ -102,6 +102,7 @@ bool AP_SerialCompass::update(void)
 
 void AP_SerialCompass::send_data(uint8_t *buffer,uint8_t size)
 {
+    if(_port !=NULL)
     _port->write(buffer, size);
 }
 void AP_SerialCompass::update_disconnect(void)

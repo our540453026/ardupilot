@@ -117,6 +117,10 @@ bool AP_Mission::start_command_camera(const AP_Mission::Mission_Command& cmd)
             cmd.content.digicam_control.focus_lock,
             cmd.content.digicam_control.shooting_cmd,
             cmd.content.digicam_control.cmd_id);
+            //if(cmd.content.digicam_control.shooting_cmd==0x01) //0x01--拍照0x02--放大 0x03--缩小 0x04--开始录像 05--停止录像
+            //{
+            //    camera->take_picture();
+            //}
         return true;
 
     case MAV_CMD_DO_SET_CAM_TRIGG_DIST:
