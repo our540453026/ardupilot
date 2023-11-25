@@ -3,7 +3,8 @@
 #include "GCS_Mavlink.h"
 #include <AP_RPM/AP_RPM_config.h>
 #include <AP_EFI/AP_EFI_config.h>
-
+#include <string.h>
+#include <stdio.h>
 MAV_TYPE GCS_Copter::frame_type() const
 {
     if (copter.motors == nullptr) {
@@ -1421,10 +1422,27 @@ void GCS_MAVLINK_Copter::handleMessage(const mavlink_message_t &msg)
             {
                 //copter.serial_concentrator.send_data(packet.payload,msg.len);
                 copter.serial_concentrator.send_data(&packet.payload[1],packet.payload[0]);
+                // gcs().send_text(MAV_SEVERITY_INFO,"se");
+                // //int i;
+                // for(int i = 1;i <packet.payload[0];i=i+5)
+                // {
+                //     gcs().send_text(MAV_SEVERITY_INFO,"%x,%x,%x,%x,%x",packet.payload[i],packet.payload[i+1],packet.payload[i+2],packet.payload[i+3],packet.payload[i+4]);
+                // }
             }
             //gcs().send_text(MAV_SEVERITY_INFO,"v2=%ld",AP_HAL::micros());
         }
-        break;     
+        break;  
+    case MAVLINK_MSG_ID_ATTITUDE:
+    {
+        mavlink_attitude_t packet;
+        mavlink_msg_attitude_decode(&msg,&packet);
+        copter.serial_concentrator.gimbal_st_u.pitch=0 - packet.pitch*57.32;
+        copter.serial_concentrator.gimbal_st_u.roll=0 - packet.roll*57.32;
+        copter.serial_concentrator.gimbal_st_u.yaw=0 - packet.yaw*57.32;
+        copter.serial_concentrator.send_gimbal_st_data(copter.serial_concentrator.gimbal_st_u);
+        //gcs().send_text(MAV_SEVERITY_INFO,"pitch:%f,roll:%f,yaw:%f",packet.pitch*57.32,packet.roll*57.32,packet.yaw*57.32);
+        break;
+    }   
     default:
         handle_common_message(msg);
         break;

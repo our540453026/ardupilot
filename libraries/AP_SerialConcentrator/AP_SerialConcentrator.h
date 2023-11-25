@@ -90,9 +90,9 @@ public:
     struct PACKED gimbal_st_t
     {
             uint32_t id;
-            int16_t pitch; /*单位 度 */	
-            int16_t roll;/*单位 度 */
-            int16_t yaw; /*单位 度 */          
+            float pitch; /*单位 度 */	
+            float roll;/*单位 度 */
+            float yaw; /*单位 度 */          
     };
     struct PACKED gimbal_t
         {
@@ -101,9 +101,9 @@ public:
             uint8_t cam_cmd; /*< 0x01--拍照0x02--放大 0x03--缩小 0x04--开始录像 05--停止录像*/
             uint16_t cam_param; /*<相机参数*/		
             uint16_t gim_cmd; /*< 0x01--俯仰0x01--横滚 0x03--航向0x04--航向与俯仰 0x05--横滚与俯仰 0x06--横滚与俯仰与航向*/	
-            int16_t pitch; /*单位 度 */	
-            int16_t roll;/*单位 度 */
-            int16_t yaw; /*单位 度 */   
+            float pitch; /*单位 度 */	
+            float roll;/*单位 度 */
+            float yaw; /*单位 度 */   
             uint16_t Cam_num;
             uint16_t Recoder_num;       
         };
@@ -179,6 +179,7 @@ public:
     bool init(const AP_SerialManager &serial_manager);
     void send_data(uint8_t *buffer,uint8_t size);
     void send_gimbal_data(gimbal_t gimbal);
+    void send_gimbal_st_data(gimbal_st_t gimbal);
     bool update(void);
     bms_t bms_state;
     gimbal_t gimbal_state;
@@ -189,6 +190,7 @@ private:
     int32_t swapInt32( int32_t value);
     int16_t swapInt16( int16_t value);
     uint16_t swapuInt16( uint16_t value);
+    float swap_fl_bits(float value) ;
     uint8_t delay_n,dug,gimbal_hz,resend_gimbal_hz,test_flag;
     int8_t pcbtemp[4];
     void update_tx_buf(void);

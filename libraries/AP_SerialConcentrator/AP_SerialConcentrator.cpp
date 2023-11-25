@@ -61,6 +61,17 @@ uint16_t AP_SerialConcentrator::swapuInt16( uint16_t value)
     return ((value & 0x00FF) << 8) |
     ((value & 0xFF00) >> 8) ;
 }
+float AP_SerialConcentrator::swap_fl_bits(float value) 
+{
+		int32_t val;
+    int32_t bits = *(int32_t*)&value; // 将float转换为unsigned int
+		
+		
+    // 将高位对调到低位
+		val = swapInt32(bits);
+    // 将unsigned int转换回float并返回
+    return *(float*)&val;
+}
 /*
  * init - perform required initialisation
  */
@@ -120,7 +131,7 @@ bool AP_SerialConcentrator::update(void)
     {
         data = _port->read();
         parse(data);
-        EnMesQueue(&usart_rx_fifo,data);
+        //EnMesQueue(&usart_rx_fifo,data);
     }
     if(numc) _last_update_time = AP_HAL::micros();
 //    bms_state.cycle++;
@@ -187,12 +198,18 @@ void AP_SerialConcentrator::send_gimbal_data(gimbal_t gimbal)
 	buf[n++] = (uint8_t)(gimbal.cam_param);
 	buf[n++] = (uint8_t)(gimbal.gim_cmd>>8);
     buf[n++] = (uint8_t)gimbal.gim_cmd;
-	buf[n++] = (uint8_t)(gimbal.pitch>>8);
-	buf[n++] = (uint8_t)(gimbal.pitch);
-	buf[n++] = (uint8_t)(gimbal.roll>>8);
-	buf[n++] = (uint8_t)(gimbal.roll);
-    buf[n++] = (uint8_t)(gimbal.yaw>>8);
-	buf[n++] = (uint8_t)(gimbal.yaw);
+	buf[n++] = ((uint8_t*)&gimbal.pitch)[3];//(uint8_t)(gimbal.pitch>>24);
+    buf[n++] = ((uint8_t*)&gimbal.pitch)[2];//(uint8_t)(gimbal.pitch>>16);
+    buf[n++] = ((uint8_t*)&gimbal.pitch)[1];//(uint8_t)(gimbal.pitch>>8);
+	buf[n++] = ((uint8_t*)&gimbal.pitch)[0];//(uint8_t)(gimbal.pitch);
+	buf[n++] = ((uint8_t*)&gimbal.roll)[3];//(uint8_t)(gimbal.roll>>24);
+    buf[n++] = ((uint8_t*)&gimbal.roll)[2];//(uint8_t)(gimbal.roll>>26);
+    buf[n++] = ((uint8_t*)&gimbal.roll)[1];//(uint8_t)(gimbal.roll>>8);
+	buf[n++] = ((uint8_t*)&gimbal.roll)[0];//(uint8_t)(gimbal.roll);
+    buf[n++] = ((uint8_t*)&gimbal.yaw)[3];//(uint8_t)(gimbal.yaw>>24);
+    buf[n++] = ((uint8_t*)&gimbal.yaw)[2];//(uint8_t)(gimbal.yaw>>16);
+    buf[n++] = ((uint8_t*)&gimbal.yaw)[1];//(uint8_t)(gimbal.yaw>>8);
+	buf[n++] = ((uint8_t*)&gimbal.yaw)[0];//(uint8_t)(gimbal.yaw);
     buf[n++] = (uint8_t)(gimbal.Cam_num>>8);
 	buf[n++] = (uint8_t)(gimbal.Cam_num);
     buf[n++] = (uint8_t)(gimbal.Recoder_num>>8);
@@ -224,6 +241,51 @@ void AP_SerialConcentrator::send_gimbal_data(gimbal_t gimbal)
 
     //gcs().send_text(MAV_SEVERITY_INFO,"gimbalok=%d",gimbal.pitch);
 }
+
+void AP_SerialConcentrator::send_gimbal_st_data(gimbal_st_t gimbal)
+{
+    
+    //uint8_t cam_shutter[17]={0xAB ,0xCB ,0x00 ,0x0b ,0x03 ,0x02 ,0x02 ,0x01 ,0x02 ,0x03 ,0x04 ,0x01 ,0x06 ,0x00 ,0x23 ,0xEE ,0xFF };
+    uint8_t buf[40];
+	uint8_t n;
+    uint16_t gim_crc;
+	n = 0;
+    buf[n++] =0xAB;
+    buf[n++] =0xCB;
+    buf[n++] =0x00;
+    buf[n++] =0x15;
+	buf[n++] = UAV_TYPE;
+	buf[n++] = (uint8_t)(CAMERA_GIM_ST_MSG_ID>>8);
+	buf[n++] = (uint8_t) CAMERA_GIM_ST_MSG_ID;
+	buf[n++] = (uint8_t)(gimbal.id>>24);
+	buf[n++] = (uint8_t)(gimbal.id>>16);
+	buf[n++] = (uint8_t)(gimbal.id>>8);
+	buf[n++] = (uint8_t)(gimbal.id);
+	buf[n++] = ((uint8_t*)&gimbal.pitch)[3];//(uint8_t)(gimbal.pitch>>24);
+    buf[n++] = ((uint8_t*)&gimbal.pitch)[2];//(uint8_t)(gimbal.pitch>>16);
+    buf[n++] = ((uint8_t*)&gimbal.pitch)[1];//(uint8_t)(gimbal.pitch>>8);
+	buf[n++] = ((uint8_t*)&gimbal.pitch)[0];//(uint8_t)(gimbal.pitch);
+	buf[n++] = ((uint8_t*)&gimbal.roll)[3];//(uint8_t)(gimbal.roll>>24);
+    buf[n++] = ((uint8_t*)&gimbal.roll)[2];//(uint8_t)(gimbal.roll>>26);
+    buf[n++] = ((uint8_t*)&gimbal.roll)[1];//(uint8_t)(gimbal.roll>>8);
+	buf[n++] = ((uint8_t*)&gimbal.roll)[0];//(uint8_t)(gimbal.roll);
+    buf[n++] = ((uint8_t*)&gimbal.yaw)[3];//(uint8_t)(gimbal.yaw>>24);
+    buf[n++] = ((uint8_t*)&gimbal.yaw)[2];//(uint8_t)(gimbal.yaw>>16);
+    buf[n++] = ((uint8_t*)&gimbal.yaw)[1];//(uint8_t)(gimbal.yaw>>8);
+	buf[n++] = ((uint8_t*)&gimbal.yaw)[0];//(uint8_t)(gimbal.yaw);
+    gim_crc = crcSum(&buf[2],n-2);
+    buf[n++] = (uint8_t)(gim_crc>>8);
+	buf[n++] = (uint8_t)(gim_crc);
+    if(_port !=NULL)
+    {
+        _port->write(buf, n);
+        
+    }
+    
+
+    //gcs().send_text(MAV_SEVERITY_INFO,"pitch_byte=%x,%x,%x,%x",buf[11],buf[12],buf[13],buf[14]);
+}
+
 
 //void AP_SerialConcentrator::update_tx_buf(void)
 //{
@@ -345,7 +407,7 @@ bool AP_SerialConcentrator::parse(uint8_t temp)
                     }
                     else
                     {
-                        gcs().send_text(MAV_SEVERITY_INFO,"bms_error len=%d,id=%x",data_msg.length,data_msg.msgid);
+                        //gcs().send_text(MAV_SEVERITY_INFO,"bms_error len=%d,id=%x",data_msg.length,data_msg.msgid);
                         return false;
                     }
                     break;
@@ -359,6 +421,7 @@ bool AP_SerialConcentrator::parse(uint8_t temp)
 bool AP_SerialConcentrator::Data_Message_Process(void)
 {
     uint16_t ack_id;
+    int len; 
     switch(data_msg.msgid)
     {
         case BMS_STATUE_MSG_ID:
@@ -384,6 +447,24 @@ bool AP_SerialConcentrator::Data_Message_Process(void)
             //gcs().send_text(MAV_SEVERITY_INFO,"bmsupdateok");
             
             break;
+        case COMP_PASSTHROUGH_MSG_ID:
+            
+            len = data_msg.length-5;
+            EnMesQueue(&usart_rx_fifo,0xAB);
+            EnMesQueue(&usart_rx_fifo,0xCB);
+            EnMesQueue(&usart_rx_fifo,(data_msg.length>>8));
+            EnMesQueue(&usart_rx_fifo,data_msg.length);
+            EnMesQueue(&usart_rx_fifo,data_msg.comptype);
+            EnMesQueue(&usart_rx_fifo,0x0F);
+            EnMesQueue(&usart_rx_fifo,0x07);
+            for(int i = 0; i <len;i++) 
+            {
+                EnMesQueue(&usart_rx_fifo,data_msg.data.bytes[i]);
+            }
+            EnMesQueue(&usart_rx_fifo,data_msg.crc>>8);
+            EnMesQueue(&usart_rx_fifo,data_msg.crc);
+            //gcs().send_text(MAV_SEVERITY_INFO,"pass len:%x crc:%x",data_msg.length,data_msg.crc);
+            break;
         case UAV_TEMP_MSG_ID:
             //delay_n++;
            // if(delay_n >2)
@@ -406,6 +487,21 @@ bool AP_SerialConcentrator::Data_Message_Process(void)
                 gimbal_state.roll = swapInt16(data_msg.data.gimbal_st_u.roll);
                 gcs().send_text(MAV_SEVERITY_INFO,"yaw=%d,pitch=%d,roll=%d",gimbal_state.yaw,gimbal_state.pitch,gimbal_state.roll);
             }*/
+            len = data_msg.length-5;
+            EnMesQueue(&usart_rx_fifo,0xAB);
+            EnMesQueue(&usart_rx_fifo,0xCB);
+            EnMesQueue(&usart_rx_fifo,(data_msg.length>>8));
+            EnMesQueue(&usart_rx_fifo,data_msg.length);
+            EnMesQueue(&usart_rx_fifo,data_msg.comptype);
+            EnMesQueue(&usart_rx_fifo,0x02);
+            EnMesQueue(&usart_rx_fifo,0x08);
+            for(int i = 0; i <len;i++) 
+            {
+                EnMesQueue(&usart_rx_fifo,data_msg.data.bytes[i]);
+            }
+            EnMesQueue(&usart_rx_fifo,data_msg.crc>>8);
+            EnMesQueue(&usart_rx_fifo,data_msg.crc);
+            gcs().send_text(MAV_SEVERITY_INFO,"rec:pitch=%f,roll=%f,yaw=%f",swap_fl_bits(data_msg.data.gimbal_st_u.pitch),swap_fl_bits(data_msg.data.gimbal_st_u.roll),swap_fl_bits(data_msg.data.gimbal_st_u.yaw));
             test_flag=1;
             break;
         case UAV_ESC_MSG_ID:
@@ -468,7 +564,7 @@ bool AP_SerialConcentrator::Data_Message_Process(void)
 
             }
             //gcs().send_text(MAV_SEVERITY_INFO,"ack=%ld",AP_HAL::micros());
-            break;
+            break;       
         default:
             break;
     }

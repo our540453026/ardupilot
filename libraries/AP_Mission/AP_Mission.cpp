@@ -362,11 +362,11 @@ bool AP_Mission::start_command(const Mission_Command& cmd)
     case MAV_CMD_DO_DIGICAM_CONFIGURE:
     case MAV_CMD_DO_DIGICAM_CONTROL:
     case MAV_CMD_DO_SET_CAM_TRIGG_DIST:
-        copter.serial_concentrator.gimbal_state.cam_type =cmd.content.digicam_control.session;
-        copter.serial_concentrator.gimbal_state.cam_cmd =cmd.content.digicam_control.shooting_cmd;
-        copter.serial_concentrator.gimbal_state.cam_param =cmd.content.digicam_control.shooting_cmd;
-        copter.serial_concentrator.gimbal_state.Cam_num++;
-        copter.serial_concentrator.send_gimbal_data(copter.serial_concentrator.gimbal_state); 
+        // copter.serial_concentrator.gimbal_state.cam_type =cmd.content.digicam_control.session;
+        // copter.serial_concentrator.gimbal_state.cam_cmd =cmd.content.digicam_control.shooting_cmd;
+        // copter.serial_concentrator.gimbal_state.cam_param =cmd.content.digicam_control.shooting_cmd;
+        // copter.serial_concentrator.gimbal_state.Cam_num++;
+        // copter.serial_concentrator.send_gimbal_data(copter.serial_concentrator.gimbal_state); 
         return start_command_camera(cmd);
     case MAV_CMD_DO_PARACHUTE:
         return start_command_parachute(cmd);
@@ -377,11 +377,11 @@ bool AP_Mission::start_command(const Mission_Command& cmd)
     case MAV_CMD_DO_SET_RESUME_REPEAT_DIST:
         return command_do_set_repeat_dist(cmd);
     case MAV_CMD_DO_GIMBAL_MANAGER_PITCHYAW:
-        gcs().send_text(MAV_SEVERITY_INFO, "pitch: %d %d", cmd.content.gimbal_manager_pitchyaw.pitch_angle_deg, cmd.content.gimbal_manager_pitchyaw.yaw_angle_deg);
-        copter.serial_concentrator.gimbal_state.pitch =cmd.content.gimbal_manager_pitchyaw.pitch_angle_deg;
-        copter.serial_concentrator.gimbal_state.yaw =cmd.content.gimbal_manager_pitchyaw.yaw_angle_deg;
-        copter.serial_concentrator.gimbal_state.gim_cmd =cmd.content.gimbal_manager_pitchyaw.flags;
-        copter.serial_concentrator.send_gimbal_data(copter.serial_concentrator.gimbal_state);
+        // gcs().send_text(MAV_SEVERITY_INFO, "pitch: %d %d", cmd.content.gimbal_manager_pitchyaw.pitch_angle_deg, cmd.content.gimbal_manager_pitchyaw.yaw_angle_deg);
+        // copter.serial_concentrator.gimbal_state.pitch =cmd.content.gimbal_manager_pitchyaw.pitch_angle_deg;
+        // copter.serial_concentrator.gimbal_state.yaw =cmd.content.gimbal_manager_pitchyaw.yaw_angle_deg;
+        // copter.serial_concentrator.gimbal_state.gim_cmd =cmd.content.gimbal_manager_pitchyaw.flags;
+        // copter.serial_concentrator.send_gimbal_data(copter.serial_concentrator.gimbal_state);
         return start_command_do_gimbal_manager_pitchyaw(cmd);
     default:
         return _cmd_start_fn(cmd);
