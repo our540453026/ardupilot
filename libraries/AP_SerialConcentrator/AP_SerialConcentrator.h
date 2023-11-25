@@ -186,7 +186,7 @@ public:
     gimbal_st_t gimbal_st_u;
     static AP_SerialConcentrator *get_singleton(void) { return _singleton; }
 private:
-    uint16_t g_crc_val;
+    uint16_t g_crc_val,test_counter;
     int32_t swapInt32( int32_t value);
     int16_t swapInt16( int16_t value);
     uint16_t swapuInt16( uint16_t value);

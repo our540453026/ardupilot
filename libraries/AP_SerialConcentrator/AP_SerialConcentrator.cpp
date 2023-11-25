@@ -302,12 +302,12 @@ void AP_SerialConcentrator::send_gimbal_st_data(gimbal_st_t gimbal)
 //}
 void AP_SerialConcentrator::update_disconnect(void)
 {
-    if((_last_update_time > bms_state.time_s) && ((_last_update_time - bms_state.time_s) >30000000))
+    if((_last_update_time > bms_state.time_s) && ((_last_update_time - bms_state.time_s) >10000000))
     {
            
           memset(&bms_state, 0, sizeof(bms_state));
           //gcs().send_text(MAV_SEVERITY_INFO,"bmsupdate3=%ld,%ld",_last_update_time,bms_state.time_s); 
-          bms_state.time_s = _last_update_time +30000000; 
+          bms_state.time_s = _last_update_time +10000000; 
     }
 }
 uint16_t AP_SerialConcentrator::crcSum(uint8_t *dat,uint8_t n)
@@ -444,7 +444,8 @@ bool AP_SerialConcentrator::Data_Message_Process(void)
             bms_state.pcb_temp2 = data_msg.data.bms.pcb_temp2;
             bms_state.type = data_msg.data.bms.type;
             bms_state.time_s = AP_HAL::micros();
-            //gcs().send_text(MAV_SEVERITY_INFO,"bmsupdateok");
+            test_counter++;
+            //gcs().send_text(MAV_SEVERITY_INFO,"bmsupdateok=%d",test_counter);
             
             break;
         case COMP_PASSTHROUGH_MSG_ID:
@@ -501,8 +502,24 @@ bool AP_SerialConcentrator::Data_Message_Process(void)
             }
             EnMesQueue(&usart_rx_fifo,data_msg.crc>>8);
             EnMesQueue(&usart_rx_fifo,data_msg.crc);
-            gcs().send_text(MAV_SEVERITY_INFO,"rec:pitch=%f,roll=%f,yaw=%f",swap_fl_bits(data_msg.data.gimbal_st_u.pitch),swap_fl_bits(data_msg.data.gimbal_st_u.roll),swap_fl_bits(data_msg.data.gimbal_st_u.yaw));
+            //gcs().send_text(MAV_SEVERITY_INFO,"rec:pitch=%f,roll=%f,yaw=%f",swap_fl_bits(data_msg.data.gimbal_st_u.pitch),swap_fl_bits(data_msg.data.gimbal_st_u.roll),swap_fl_bits(data_msg.data.gimbal_st_u.yaw));
             test_flag=1;
+            break;
+        case UAV_RTK_RAW_MSG_ID:
+            len = data_msg.length-5;
+            EnMesQueue(&usart_rx_fifo,0xAB);
+            EnMesQueue(&usart_rx_fifo,0xCB);
+            EnMesQueue(&usart_rx_fifo,(data_msg.length>>8));
+            EnMesQueue(&usart_rx_fifo,data_msg.length);
+            EnMesQueue(&usart_rx_fifo,data_msg.comptype);
+            EnMesQueue(&usart_rx_fifo,0x00);
+            EnMesQueue(&usart_rx_fifo,0x0B);
+            for(int i = 0; i <len;i++) 
+            {
+                EnMesQueue(&usart_rx_fifo,data_msg.data.bytes[i]);
+            }
+            EnMesQueue(&usart_rx_fifo,data_msg.crc>>8);
+            EnMesQueue(&usart_rx_fifo,data_msg.crc);
             break;
         case UAV_ESC_MSG_ID:
             AP_ESC_Telem_Backend::TelemetryData  new_data;

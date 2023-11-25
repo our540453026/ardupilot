@@ -141,7 +141,7 @@ void ModeGuided::run()
             //target.x = current_pos.x - target.x;
             //target.y = current_pos.y - target.y;
             target.z= current_pos.z;
-            yaw_deg = wrap_360(degrees(copter.ahrs.get_yaw()))*100.0f;;
+            yaw_deg = wrap_360(degrees(copter.ahrs.get_yaw()))*100.0f;
             //gcs().send_text(MAV_SEVERITY_CRITICAL, "left up cur,x=%f,y=%f,z=%f",current_pos.x,current_pos.y,current_pos.z);
             //target = inertial_nav.get_position_neu_cm();
             gcs().send_text(MAV_SEVERITY_CRITICAL, "left up,x=%f,y=%f,z=%f",target.x,target.y,target.z);
