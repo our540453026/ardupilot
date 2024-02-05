@@ -71,7 +71,9 @@
 #include <AP_Proximity/AP_Proximity.h>      // ArduPilot proximity sensor library
 #include <AP_OpticalFlow/AP_OpticalFlow.h>
 #include <AP_Winch/AP_Winch_config.h>
-
+#include <AP_SerialConcentrator/AP_SerialConcentrator.h> 
+#include <AP_SerialConcentrator/AP_SerialCompass.h>
+#include <AP_OpenMV/AP_OpenMV.h>
 // Configuration
 #include "defines.h"
 #include "config.h"
@@ -214,6 +216,7 @@ public:
     friend class ModeGuided;
     friend class ModeLand;
     friend class ModeLoiter;
+    friend class ModeOpenmv;
     friend class ModePosHold;
     friend class ModeRTL;
     friend class ModeSmartRTL;
@@ -227,6 +230,12 @@ public:
     friend class ModeTurtle;
 
     Copter(void);
+    AP_SerialConcentrator serial_concentrator;
+    AP_SerialCompass serial_compass;
+    AP_OpenMV openmv;
+    uint16_t avoid_rtl_delay=0;
+    uint16_t avoid_rtl_count=0;
+    bool avoid_rtl_flag=false;
 
 private:
 
@@ -820,7 +829,7 @@ private:
 
     // standby.cpp
     void standby_update();
-
+    void Log_Write_MotBattBMS();
     // Log.cpp
     void Log_Write_Control_Tuning();
     void Log_Write_Attitude();
@@ -977,6 +986,9 @@ private:
 #endif
 #if MODE_GUIDED_ENABLED == ENABLED
     ModeGuided mode_guided;
+#endif
+#if MODE_OPENMV_ENABLED == ENABLED
+    ModeOpenmv mode_openmv;
 #endif
     ModeLand mode_land;
 #if MODE_LOITER_ENABLED == ENABLED

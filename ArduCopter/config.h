@@ -269,7 +269,9 @@
 #ifndef MODE_FLOWHOLD_ENABLED
 # define MODE_FLOWHOLD_ENABLED !HAL_MINIMIZE_FEATURES && AP_OPTICALFLOW_ENABLED
 #endif
-
+#ifndef MODE_OPENMV_ENABLED
+# define MODE_OPENMV_ENABLED ENABLED
+#endif
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
@@ -647,4 +649,20 @@
 
 #ifndef AC_CUSTOMCONTROL_MULTI_ENABLED
 #define AC_CUSTOMCONTROL_MULTI_ENABLED FRAME_CONFIG == MULTICOPTER_FRAME && AP_CUSTOMCONTROL_ENABLED
+#endif
+
+#ifndef USERHOOK_MEDIUMLOOP
+# define USERHOOK_MEDIUMLOOP ENABLED
+#endif
+#ifndef USERHOOK_SLOWLOOP
+# define USERHOOK_SLOWLOOP ENABLED
+#endif
+#ifndef USERHOOK_SUPERSLOWLOOP
+# define USERHOOK_SUPERSLOWLOOP ENABLED
+#endif
+#ifndef USERHOOK_50HZLOOP 
+# define USERHOOK_50HZLOOP ENABLED
+#endif
+#ifndef USERHOOK_FASTLOOP 
+# define USERHOOK_FASTLOOP ENABLED
 #endif

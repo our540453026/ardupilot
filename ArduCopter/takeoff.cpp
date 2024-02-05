@@ -139,7 +139,6 @@ void Mode::auto_takeoff_run()
 
     // set motors to full range
     motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
-
     // aircraft stays in landed state until rotor speed run up has finished
     if (motors->get_spool_state() != AP_Motors::SpoolState::THROTTLE_UNLIMITED) {
         // motors have not completed spool up yet so relax navigation and position controllers
@@ -202,7 +201,11 @@ void Mode::auto_takeoff_run()
     pos_control->update_z_controller();
 
     // call attitude controller with auto yaw
-    attitude_control->input_thrust_vector_heading(pos_control->get_thrust_vector(), auto_yaw.get_heading());
+    AC_AttitudeControl::HeadingCommand heading;
+    heading.heading_mode = AC_AttitudeControl::HeadingMode::Rate_Only;
+    heading.yaw_rate_cds = 0.0;
+    attitude_control->input_thrust_vector_heading(pos_control->get_thrust_vector(), heading);
+    //attitude_control->input_thrust_vector_heading(pos_control->get_thrust_vector(), auto_yaw.get_heading());
 
     // takeoff complete when we are less than 1% of the stopping distance from the target altitude
     // and 10% our maximum climb rate

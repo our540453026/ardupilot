@@ -322,7 +322,7 @@ public:
 
     // mission item index to be sent on queued msg, delayed or not
     uint16_t mission_item_reached_index = AP_MISSION_CMD_INDEX_NONE;
-
+    uint8_t send_v2_extension_index ;
     // common send functions
     void send_heartbeat(void) const;
     void send_meminfo(void);
@@ -334,6 +334,7 @@ public:
     void send_battery_status(const uint8_t instance) const;
     bool send_battery_status();
     void send_distance_sensor();
+    void send_v2_extension() ;
     // send_rangefinder sends only if a downward-facing instance is
     // found.  Rover overrides this!
     virtual void send_rangefinder() const;
@@ -732,6 +733,7 @@ private:
         PRIVATE = (1<<3),
         LOCKED = (1<<4),
     };
+    mavlink_v2_extension_t mavlink_v2_extension;
     void log_mavlink_stats();
 
     uint32_t last_accel_cal_ms; // used to rate limit accel cals for bad links

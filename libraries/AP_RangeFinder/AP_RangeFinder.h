@@ -102,7 +102,9 @@ public:
         USD1_CAN = 33,
         Benewake_CAN = 34,
         TeraRanger_Serial = 35,
-        Lua_Scripting = 36,
+        TOFP_F = 36,
+        MR72 = 37,
+        Lua_Scripting = 38,
         SIM = 100,
     };
 

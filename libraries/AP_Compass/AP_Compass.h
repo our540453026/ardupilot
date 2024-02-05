@@ -346,7 +346,7 @@ public:
     MAV_RESULT mag_cal_fixed_yaw(float yaw_deg, uint8_t compass_mask,
                                  float lat_deg, float lon_deg,
                                  bool force_use=false);
-
+    void handle_serial(int16_t mag_x,int16_t mag_y,int16_t mag_z);
 #if AP_COMPASS_MSP_ENABLED
     void handle_msp(const MSP::msp_compass_data_message_t &pkt);
 #endif
@@ -475,6 +475,10 @@ private:
 #if AP_COMPASS_MMC5XX3_ENABLED
         DRIVER_MMC5XX3  =19,
 #endif
+#if AP_COMPASS_SERIAL1_ENABLED
+        DRIVER_SERIAL1  =20,
+#endif
+    
     };
 
     bool _driver_enabled(enum DriverType driver_type);

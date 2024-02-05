@@ -557,6 +557,7 @@ static const ap_message STREAM_EXTRA3_msgs[] = {
 #if HAL_EFI_ENABLED
     MSG_EFI_STATUS,
 #endif
+    MSG_V2_EXTENSION,
 };
 static const ap_message STREAM_PARAMS_msgs[] = {
     MSG_NEXT_PARAM
@@ -1416,7 +1417,35 @@ void GCS_MAVLINK_Copter::handleMessage(const mavlink_message_t &msg)
         copter.g2.toy_mode.handle_message(msg);
         break;
 #endif
-        
+    case MAVLINK_MSG_ID_V2_EXTENSION :
+        {
+            mavlink_v2_extension_t packet;
+            mavlink_msg_v2_extension_decode(&msg,&packet);
+            if(packet.message_type == 32768)
+            {
+                //copter.serial_concentrator.send_data(packet.payload,msg.len);
+                copter.serial_concentrator.send_data(&packet.payload[1],packet.payload[0]);
+                // gcs().send_text(MAV_SEVERITY_INFO,"se");
+                // //int i;
+                // for(int i = 1;i <packet.payload[0];i=i+5)
+                // {
+                //     gcs().send_text(MAV_SEVERITY_INFO,"%x,%x,%x,%x,%x",packet.payload[i],packet.payload[i+1],packet.payload[i+2],packet.payload[i+3],packet.payload[i+4]);
+                // }
+            }
+            //gcs().send_text(MAV_SEVERITY_INFO,"v2=%ld",AP_HAL::micros());
+        }
+        break; 
+    case MAVLINK_MSG_ID_ATTITUDE:
+    {
+        mavlink_attitude_t packet;
+        mavlink_msg_attitude_decode(&msg,&packet);
+        copter.serial_concentrator.gimbal_st_u.pitch=degrees(packet.pitch);//*57.32;
+        copter.serial_concentrator.gimbal_st_u.roll=degrees(packet.roll);//*57.32;
+        copter.serial_concentrator.gimbal_st_u.yaw=degrees(copter.ahrs.get_yaw());//0 - packet.yaw*57.32;
+        copter.serial_concentrator.send_gimbal_st_data(copter.serial_concentrator.gimbal_st_u);
+        //gcs().send_text(MAV_SEVERITY_INFO,"pitch:%f,roll:%f,yaw:%f",packet.pitch*57.32,packet.roll*57.32,packet.yaw*57.32);
+        break;
+    }       
     default:
         handle_common_message(msg);
         break;

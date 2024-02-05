@@ -62,7 +62,7 @@
 #include "MissionItemProtocol_Fence.h"
 
 #include <stdio.h>
-
+#include <AP_SerialConcentrator/AP_SerialConcentrator.h>
 #if HAL_RCINPUT_WITH_AP_RADIO
 #include <AP_Radio/AP_Radio.h>
 #include <AP_BoardConfig/AP_BoardConfig.h>
@@ -186,6 +186,7 @@ bool GCS_MAVLINK::init(uint8_t instance)
         is_high_latency_link = true;
     }
 #endif
+    send_v2_extension_index =1;
     return true;
 }
 
@@ -475,7 +476,72 @@ void GCS_MAVLINK::send_rangefinder() const
             s->distance(),
             s->voltage_mv() * 0.001f);
 }
+void GCS_MAVLINK::send_v2_extension()
+{
+    //gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_extension=0");
+    uint8_t dat;
+    uint32_t tnow;
+    AP_SerialConcentrator *serialConcentrator = AP_SerialConcentrator::get_singleton();
+    if (serialConcentrator == nullptr) {
+        return;
+    }
 
+    while(serialConcentrator->usart_serial_available(&dat))
+    {
+        mavlink_v2_extension.payload[send_v2_extension_index++] = dat;
+        if(send_v2_extension_index >= LINK_LENGTH) //
+        {
+            mavlink_v2_extension.payload[0] = LINK_LENGTH - 1;//send data length 有效数据长度
+            mavlink_msg_v2_extension_send_struct(chan,&mavlink_v2_extension);
+            //gcs().send_text(MAV_SEVERITY_CRITICAL,"v3_ex=%d,%ld",send_v2_extension_index,AP_HAL::micros());
+            send_v2_extension_index = 1; 
+            memset(mavlink_v2_extension.payload,0,LINK_LENGTH);          
+            //gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_extension=%d",send_v2_extension_index);
+        }
+        /*else
+        {
+
+            if(serialConcentrator->Tx_urgent_statue)
+            {
+                mavlink_v2_extension.payload[0] = send_v2_extension_index - 1;//send data length
+                mavlink_msg_v2_extension_send_struct(chan,&mavlink_v2_extension);
+                gcs().send_text(MAV_SEVERITY_CRITICAL,"v3_ex=%d,%ld",send_v2_extension_index,AP_HAL::micros());
+                for(i=0;i<send_v2_extension_index;i++)
+                {
+                        gcs().send_text(MAV_SEVERITY_CRITICAL,"%x",mavlink_v2_extension.payload[i+1]);
+
+                }
+                send_v2_extension_index = 1;
+                serialConcentrator->Tx_urgent_statue = false;
+            }
+        }*/
+//        if(dat == 0xAB) gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_AB=%d",send_v2_extension_index);
+//        if(dat == 0xCB) gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_BC=%d",send_v2_extension_index);
+    }
+    tnow = AP_HAL::micros();
+    if(send_v2_extension_index > 1 && tnow - serialConcentrator->_last_update_time >500)
+    {
+        mavlink_v2_extension.payload[0] = send_v2_extension_index - 1;//send data length
+        mavlink_msg_v2_extension_send_struct(chan,&mavlink_v2_extension);
+        //gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_ex=%d,%ld",send_v2_extension_index,AP_HAL::micros());
+        /*for(i=1;i<send_v2_extension_index;i++)
+                {
+                        gcs().send_text(MAV_SEVERITY_CRITICAL,"%x",mavlink_v2_extension.payload[i]);
+
+                }*/
+        // gcs().send_text(MAV_SEVERITY_INFO,"re");
+        // for(int i = 1; i <mavlink_v2_extension.payload[0];i=i+10)
+        // {
+        //     gcs().send_text(MAV_SEVERITY_INFO,"%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",mavlink_v2_extension.payload[i],mavlink_v2_extension.payload[i+1],mavlink_v2_extension.payload[i+2],mavlink_v2_extension.payload[i+3],mavlink_v2_extension.payload[i+4],mavlink_v2_extension.payload[i+5],mavlink_v2_extension.payload[i+6],mavlink_v2_extension.payload[i+7],mavlink_v2_extension.payload[i+8],mavlink_v2_extension.payload[i+9]);
+        // }
+
+        send_v2_extension_index = 1;
+        memset(mavlink_v2_extension.payload,0,LINK_LENGTH); 
+        serialConcentrator->Tx_urgent_statue = false;
+        
+    }
+    //gcs().send_text(MAV_SEVERITY_CRITICAL,"v4_ex=%d,%ld",send_v2_extension_index,AP_HAL::micros());
+}
 #if HAL_PROXIMITY_ENABLED
 void GCS_MAVLINK::send_proximity()
 {
@@ -993,6 +1059,7 @@ ap_message GCS_MAVLINK::mavlink_id_to_ap_message_id(const uint32_t mavlink_id) c
 #if HAL_ADSB_ENABLED
         { MAVLINK_MSG_ID_UAVIONIX_ADSB_OUT_STATUS, MSG_UAVIONIX_ADSB_OUT_STATUS},
 #endif
+        { MAVLINK_MSG_ID_V2_EXTENSION,           MSG_V2_EXTENSION},
             };
 
     for (uint8_t i=0; i<ARRAY_SIZE(map); i++) {
@@ -5657,7 +5724,9 @@ bool GCS_MAVLINK::try_send_message(const enum ap_message id)
     case MSG_DISTANCE_SENSOR:
         send_distance_sensor();
         break;
-
+    case MSG_V2_EXTENSION:
+        send_v2_extension();
+        break;
 #if AP_CAMERA_ENABLED
     case MSG_CAMERA_FEEDBACK:
         {

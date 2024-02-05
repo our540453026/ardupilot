@@ -309,7 +309,7 @@ AC_AttitudeControl::HeadingCommand Mode::AutoYaw::get_heading()
         // RC failsafe, or disabled make sure not in pilot control
         auto_yaw.set_mode(AutoYaw::Mode::HOLD);
     }
-
+   //auto_yaw.set_mode(AutoYaw::Mode::PILOT_RATE);
 #if WEATHERVANE_ENABLED == ENABLED
     update_weathervane(_pilot_yaw_rate_cds);
 #endif

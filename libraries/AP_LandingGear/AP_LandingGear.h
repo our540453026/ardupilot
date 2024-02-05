@@ -4,7 +4,7 @@
 
 #include "AP_LandingGear_config.h"
 
-#if AP_LANDINGGEAR_ENABLED
+#if AP_LANDINGGEAR_ENABLED 
 
 #include <AP_Param/AP_Param.h>
 #include <AP_Common/AP_Common.h>

@@ -214,7 +214,7 @@ public:
     // baro will be used for the _home relative one if the EKF isn't
     void get_relative_position_D_home(float &posD) const;
     bool get_relative_position_D_origin(float &posD) const WARN_IF_UNUSED;
-
+    void get_relative_gps_D_home(float &posD) const;
     // Get a derivative of the vertical position in m/s which is kinematically consistent with the vertical position is required by some control loops.
     // This is different to the vertical velocity from the EKF which is not always consistent with the vertical position due to the various errors that are being corrected for.
     bool get_vert_pos_rate(float &velocity) const;

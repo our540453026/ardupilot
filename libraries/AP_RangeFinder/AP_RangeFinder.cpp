@@ -57,7 +57,8 @@
 #include <AP_Logger/AP_Logger.h>
 #include <AP_SerialManager/AP_SerialManager.h>
 #include <AP_Vehicle/AP_Vehicle_Type.h>
-
+#include "AP_RangeFinder_MR72.h"
+#include "AP_RangeFinder_TOFP.h"
 extern const AP_HAL::HAL &hal;
 
 // table of user settable parameters
@@ -480,6 +481,16 @@ void RangeFinder::detect_instance(uint8_t instance, uint8_t& serial_instance)
 #if AP_RANGEFINDER_LANBAO_ENABLED
         serial_create_fn = AP_RangeFinder_Lanbao::create;
 #endif
+        break;
+    case Type::MR72:
+        if (AP_RangeFinder_MR72::detect()) {
+            _add_backend(new AP_RangeFinder_MR72(state[instance], params[instance]), instance, serial_instance++);
+        }
+        break; 
+    case Type::TOFP_F:
+        if (AP_RangeFinder_TOFP::detect()) {
+            _add_backend(new AP_RangeFinder_TOFP(state[instance], params[instance]), instance, serial_instance++);
+        }
         break;
     case Type::LeddarVu8_Serial:
 #if AP_RANGEFINDER_LEDDARVU8_ENABLED

@@ -381,13 +381,17 @@ public:
         k_param_logger = 253, // 253 - Logging Group
 
         // 254,255: reserved
-
+        k_param_avoid_distan_m = 254, // 
+        k_param_avoid_behavior = 255, //
+        k_param_rtk_behavior = 256, //
         k_param_vehicle = 257, // vehicle common block of parameters
 
         // the k_param_* space is 9-bits in size
         // 511: reserved
     };
-
+    AP_Int16        rtk_behavior;
+    AP_Int16        avoid_behavior;
+    AP_Int16        avoid_distan_m;
     AP_Int16        format_version;
 
     // Telemetry control
@@ -654,7 +658,9 @@ public:
 #if MODE_GUIDED_ENABLED == ENABLED
     AP_Int32 guided_options;
 #endif
-
+#if MODE_OPENMV_ENABLED == ENABLED
+    AP_Int32 openmv_options;
+#endif
     AP_Float fs_gcs_timeout;
 
 #if MODE_RTL_ENABLED == ENABLED
@@ -670,7 +676,9 @@ public:
 #if MODE_GUIDED_ENABLED == ENABLED
     AP_Float guided_timeout;
 #endif
-
+#if MODE_OPENMV_ENABLED == ENABLED
+    AP_Float openmv_timeout;
+#endif
     AP_Int8                 surftrak_mode;
     AP_Int8                 failsafe_dr_enable;
     AP_Int16                failsafe_dr_timeout;
