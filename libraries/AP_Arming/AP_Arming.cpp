@@ -719,7 +719,16 @@ bool AP_Arming::rc_arm_checks(AP_Arming::Method method)
                 }
             }
         }
-
+        Vector3f euler;
+        float euler_yaw,yaw_deg;
+        AP::ahrs().get_secondary_attitude(euler);
+        euler_yaw =(uint16_t)(wrap_360_cd(degrees(euler.z)*100));
+        yaw_deg = wrap_360(degrees(AP::ahrs().get_yaw()))*100.0f;
+        if(fabsf(euler_yaw-yaw_deg)>2000)
+        {
+            check_failed(ARMING_CHECK_COMPASS, true, "yaw is not inconsistent %f,%f",euler_yaw,yaw_deg);
+            check_passed = false;
+        }
         // if throttle check is enabled, require zero input
         if (rc().arming_check_throttle()) {
             RC_Channel *c = rc().channel(rcmap->throttle() - 1);

@@ -61,7 +61,7 @@ AP_GPS_NOVA::AP_GPS_NOVA(AP_GPS &_gps, AP_GPS::GPS_State &_state,
 
 const char* const AP_GPS_NOVA::_initialisation_blob[28] {
     "\r\n\r\nunlogall\r\n", // cleanup enviroment
-    "CONFIG HEADING OFFSET 180 0\r\n",
+    "CONFIG HEADING OFFSET 0 0\r\n",
     "GPTHS 1\r\n",  //设置双天线定向
     "BESTNAVB 0.1\r\n", // poll message, as dop only changes when a sat is dropped/added to the visible list
     "STADOPB 0.2\r\n", // tersus
@@ -449,7 +449,7 @@ AP_GPS_NOVA::process_message(void)
         const heading3a &heading3au = nova_msg.data.heading3au;
         if(heading3au.solstat == 0 )//&& heading3au.postype == 50)
         {
-            state.gps_yaw = wrap_360(heading3au.heading);
+            state.gps_yaw = wrap_360(heading3au.heading + 180);
             state.have_gps_yaw = true;
             state.gps_yaw_accuracy =  heading3au.hdg_std;
             state.have_gps_yaw_accuracy = true;
