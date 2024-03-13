@@ -59,8 +59,8 @@ AP_GPS_NOVA::AP_GPS_NOVA(AP_GPS &_gps, AP_GPS::GPS_State &_state,
     }
 }
 
-const char* const AP_GPS_NOVA::_initialisation_blob[28] {
-    "\r\n\r\nunlogall\r\n", // cleanup enviroment
+const char* const AP_GPS_NOVA::_initialisation_blob[31] {
+     "\r\n\r\nunlogall\r\n", // cleanup enviroment
     "CONFIG HEADING OFFSET 0 0\r\n",
     "GPTHS 1\r\n",  //设置双天线定向
     "BESTNAVB 0.1\r\n", // poll message, as dop only changes when a sat is dropped/added to the visible list
@@ -89,6 +89,11 @@ const char* const AP_GPS_NOVA::_initialisation_blob[28] {
     "config nmeaversion v31\r\n", 
     "CONFIG RTK TIMEOUT 600 \r\n",
     "SAVECONFIG \r\n",
+    // "MASK GPS \r\n",
+    // "MASK GLO \r\n",
+    // "MASK GAL \r\n",
+    // "MASK QZSS \r\n",
+
 };
 
 // Process all bytes available from the stream

@@ -55,7 +55,7 @@ private:
     
     uint8_t _init_blob_index = 0;
     uint32_t _init_blob_time = 0;
-    static const char* const _initialisation_blob[28];
+    static const char* const _initialisation_blob[31];
    
     uint32_t crc_error_counter = 0;
     uint32_t nova_crc;
@@ -189,6 +189,46 @@ private:
         float horspd_std;
 
     };
+
+    struct PACKED pvtsln
+    {
+        uint32_t bestpos_type;      ///
+        float hgt;              ///< height above mean sea level (m)
+        double lat;            ///< latitude (deg)
+        double lng;            ///< longitude (deg)
+        float hgtsdev;         ///< height standard deviation (m)
+        float latsdev;         ///< latitude standard deviation (m)
+        float lngsdev;
+        float diffage;
+        uint32_t psrpos_type;
+        float psrpos_hgt;              ///< height above mean sea level (m)
+        double psrpos_lat;            ///< latitude (deg)
+        double psrpos_lng; 
+        float undulation;      ///< relationship between the geoid and the ellipsoid (m)
+        uint8_t bestpos_svs;
+        uint8_t bestpos_solnsvs;
+        uint8_t psrpos_svs;
+        uint8_t psrpos_solnsvs;
+        double psrvel_north;
+        double psrvel_east;
+        double psrvel_ground;
+        uint32_t heading_type;
+        float heading_length;         
+        float heading_degree;         
+        float heading_pitch;        
+        uint8_t heading_trackedsvs;
+        uint8_t heading_solnsvs;
+        uint8_t heading_ggl1;
+        uint8_t heading_ggl1l2;
+        float gdop;         
+        float pdop;         
+        float hdop;
+        float htdop; 
+        float tdop;        
+        float cutoff;         
+        uint16_t PRN_No;
+        uint16_t PRN_list[41];
+    };
     struct PACKED heading3a
     {
         uint32_t solstat;      ///< Solution status
@@ -243,6 +283,7 @@ private:
         heading3a heading3au;
         stadop stadopu;
         bestnav bestnavu;
+        pvtsln pvtslnu;
         uint8_t bytes[256];
     };
     

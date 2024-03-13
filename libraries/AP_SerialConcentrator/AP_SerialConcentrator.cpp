@@ -445,7 +445,7 @@ bool AP_SerialConcentrator::Data_Message_Process(void)
             bms_state.type = data_msg.data.bms.type;
             bms_state.time_s = AP_HAL::micros();
             test_counter++;
-            //gcs().send_text(MAV_SEVERITY_INFO,"bmsupdateok=%d",test_counter);
+            //gcs().send_text(MAV_SEVERITY_INFO,"bmsupdateok=%ld,%ld",bms_state.id,data_msg.data.bms.id);
             
             break;
         case COMP_PASSTHROUGH_MSG_ID:
@@ -557,6 +557,20 @@ bool AP_SerialConcentrator::Data_Message_Process(void)
             //gcs().send_text(MAV_SEVERITY_INFO,"v=%d,rpm=%d,%d,%d,%d",swapuInt16(data_msg.data.esc_st.vot1),swapuInt16(data_msg.data.esc_st.rpm1),swapuInt16(data_msg.data.esc_st.rpm2),swapuInt16(data_msg.data.esc_st.rpm3),swapuInt16(data_msg.data.esc_st.rpm4));
             break;
         case ACK_MSG_ID:
+            len = data_msg.length-5;
+            EnMesQueue(&usart_rx_fifo,0xAB);
+            EnMesQueue(&usart_rx_fifo,0xCB);
+            EnMesQueue(&usart_rx_fifo,(data_msg.length>>8));
+            EnMesQueue(&usart_rx_fifo,data_msg.length);
+            EnMesQueue(&usart_rx_fifo,data_msg.comptype);
+            EnMesQueue(&usart_rx_fifo,0xfe);
+            EnMesQueue(&usart_rx_fifo,0xfe);
+            for(int i = 0; i <len;i++) 
+            {
+                EnMesQueue(&usart_rx_fifo,data_msg.data.bytes[i]);
+            }
+            EnMesQueue(&usart_rx_fifo,data_msg.crc>>8);
+            EnMesQueue(&usart_rx_fifo,data_msg.crc);
             Tx_urgent_statue = true;
             ack_id= swapuInt16(data_msg.data.gimbal_ack_u.ack_cmd);
             switch(ack_id)
