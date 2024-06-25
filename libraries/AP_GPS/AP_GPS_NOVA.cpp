@@ -20,7 +20,7 @@
 #include "AP_GPS.h"
 #include "AP_GPS_NOVA.h"
 #include <AP_Logger/AP_Logger.h>
-
+#include <GCS_MAVLink/GCS.h>
 #if AP_GPS_NOVA_ENABLED
 
 extern const AP_HAL::HAL& hal;
@@ -50,17 +50,26 @@ AP_GPS_NOVA::AP_GPS_NOVA(AP_GPS &_gps, AP_GPS::GPS_State &_state,
     nova_msg.header.data[1] = NOVA_PREAMBLE2;
     nova_msg.header.data[2] = NOVA_PREAMBLE3;
 
-    if (gps._auto_config != AP_GPS::GPS_AUTO_CONFIG_DISABLE) {
-        const char *init_str = _initialisation_blob[0];
-        const char *init_str1 = _initialisation_blob[1];
+    // if (gps._auto_config != AP_GPS::GPS_AUTO_CONFIG_DISABLE) {
+    //     const char *init_str = _initialisation_blob[0];
+    //     const char *init_str1 = _initialisation_blob[1];
 
-        port->write((const uint8_t*)init_str, strlen(init_str));
-        port->write((const uint8_t*)init_str1, strlen(init_str1));
-    }
+    //     port->write((const uint8_t*)init_str, strlen(init_str));
+    //     port->write((const uint8_t*)init_str1, strlen(init_str1));
+    // }
 }
 
-const char* const AP_GPS_NOVA::_initialisation_blob[31] {
+const char* const AP_GPS_NOVA::_initialisation_blob[GPS_CONFIG_MESSAGE_NUM] {
      "\r\n\r\nunlogall\r\n", // cleanup enviroment
+    "UNMASK GPS \r\n",
+    "UNMASK GLO \r\n",
+    "UNMASK GAL \r\n",
+    "UNMASK QZSS \r\n",
+    // "MASK GPS \r\n",
+    // "MASK GLO \r\n",
+    // "MASK GAL \r\n",
+    // "MASK QZSS \r\n",
+    "CONFIG PPP DISABLE B2B-PPP\r\n",
     "CONFIG HEADING OFFSET 0 0\r\n",
     "GPTHS 1\r\n",  //设置双天线定向
     "BESTNAVB 0.1\r\n", // poll message, as dop only changes when a sat is dropped/added to the visible list
@@ -88,11 +97,14 @@ const char* const AP_GPS_NOVA::_initialisation_blob[31] {
     "CONFIG PPS ENABLE GPS POSITIVE 10000 1000 0 0\r\n",
     "config nmeaversion v31\r\n", 
     "CONFIG RTK TIMEOUT 600 \r\n",
+    // "CONFIG PPP ENABLE B2B-PPP\r\n",
+    // "CONFIG PPP CONVERGE 20 20\r\n",
+    // "CONFIG SIGNALGROUP 3 6\r\n",
+
+    // "pppnava com1 1\r\n"
+    
     "SAVECONFIG \r\n",
-    // "MASK GPS \r\n",
-    // "MASK GLO \r\n",
-    // "MASK GAL \r\n",
-    // "MASK QZSS \r\n",
+
 
 };
 
@@ -110,6 +122,23 @@ AP_GPS_NOVA::read(void)
             if (now > _init_blob_time) {
                 port->write((const uint8_t*)init_str, strlen(init_str));
                 _init_blob_time = now + 200;
+                gcs().send_text(MAV_SEVERITY_INFO,"nova auto config index:%d",_init_blob_index);
+                _init_blob_index++;
+            }
+        }
+    }
+    else
+    {
+        const uint32_t now = AP_HAL::millis();
+        
+        if (_init_blob_index < GPS_CONFIG_MESSAGE_NUM) {
+            if(_init_blob_index==0) _init_blob_index=1;
+            const char *init_str = _initialisation_blob[_init_blob_index];
+
+            if (now > _init_blob_time) {
+                port->write((const uint8_t*)init_str, strlen(init_str));
+                _init_blob_time = now + 200;
+                gcs().send_text(MAV_SEVERITY_INFO,"nova init index:%d",_init_blob_index);
                 _init_blob_index++;
             }
         }
@@ -293,66 +322,66 @@ AP_GPS_NOVA::process_message(void)
     //check_new_itow(nova_msg.header.nova_headeru.tow, nova_msg.header.nova_headeru.messagelength + nova_msg.header.nova_headeru.headerlength);
     check_new_itow(nova_msg.header.um_headeru.ms, nova_msg.header.um_headeru.messagelength + 24);
     
-    if (messageid == 42) // bestpos
-    {
-        const bestpos &bestposu = nova_msg.data.bestposu;
+    // if (messageid == 42) // bestpos
+    // {
+    //     const bestpos &bestposu = nova_msg.data.bestposu;
 
-        state.time_week = nova_msg.header.nova_headeru.week;
-        state.time_week_ms = (uint32_t) nova_msg.header.nova_headeru.tow;
-        state.last_gps_time_ms = AP_HAL::millis();
+    //     state.time_week = nova_msg.header.nova_headeru.week;
+    //     state.time_week_ms = (uint32_t) nova_msg.header.nova_headeru.tow;
+    //     state.last_gps_time_ms = AP_HAL::millis();
 
-        state.location.lat = (int32_t) (bestposu.lat * (double)1e7);
-        state.location.lng = (int32_t) (bestposu.lng * (double)1e7);
-        state.location.alt = (int32_t) (bestposu.hgt * 100)-gps.alt_offset;
-        state.have_undulation = true;
-        state.undulation = bestposu.undulation;
+    //     state.location.lat = (int32_t) (bestposu.lat * (double)1e7);
+    //     state.location.lng = (int32_t) (bestposu.lng * (double)1e7);
+    //     state.location.alt = (int32_t) (bestposu.hgt * 100)-gps.alt_offset;
+    //     state.have_undulation = true;
+    //     state.undulation = bestposu.undulation;
 
-        state.num_sats = bestposu.svsused;
+    //     state.num_sats = bestposu.svsused;
 
-        state.horizontal_accuracy = (float) ((bestposu.latsdev + bestposu.lngsdev)/2);
-        state.vertical_accuracy = (float) bestposu.hgtsdev;
-        state.have_horizontal_accuracy = true;
-        state.have_vertical_accuracy = true;
-        state.rtk_age_ms = bestposu.diffage * 1000;
-        state.rtk_num_sats = bestposu.svsused;
+    //     state.horizontal_accuracy = (float) ((bestposu.latsdev + bestposu.lngsdev)/2);
+    //     state.vertical_accuracy = (float) bestposu.hgtsdev;
+    //     state.have_horizontal_accuracy = true;
+    //     state.have_vertical_accuracy = true;
+    //     state.rtk_age_ms = bestposu.diffage * 1000;
+    //     state.rtk_num_sats = bestposu.svsused;
 
-        if (bestposu.solstat == 0) // have a solution
-        {
-            switch (bestposu.postype)
-            {
-                case 16:
-                    state.status = AP_GPS::GPS_OK_FIX_3D;
-                    break;
-                case 17: // psrdiff
-                case 18: // waas
-                case 20: // omnistar
-                case 68: // ppp_converg
-                case 69: // ppp
-                    state.status = AP_GPS::GPS_OK_FIX_3D_DGPS;
-                    break;
-                case 32: // l1 float
-                case 33: // iono float
-                case 34: // narrow float
-                    state.status = AP_GPS::GPS_OK_FIX_3D_RTK_FLOAT;
-                    break;
-                case 48: // l1 int
-                case 49: // l1 int
-                case 50: // narrow int
-                    state.status = AP_GPS::GPS_OK_FIX_3D_RTK_FIXED;
-                    break;
-                case 0: // NONE
-                case 1: // FIXEDPOS
-                case 2: // FIXEDHEIGHT
-                default:
-                    state.status = AP_GPS::NO_FIX;
-                    break;
-            }
-        } else {
-            state.status = AP_GPS::NO_FIX;
-        }
+    //     if (bestposu.solstat == 0) // have a solution
+    //     {
+    //         switch (bestposu.postype)
+    //         {
+    //             case 16:
+    //                 state.status = AP_GPS::GPS_OK_FIX_3D;
+    //                 break;
+    //             case 17: // psrdiff
+    //             case 18: // waas
+    //             case 20: // omnistar
+    //             case 68: // ppp_converg
+    //             case 69: // ppp
+    //                 state.status = AP_GPS::GPS_OK_FIX_3D_DGPS;
+    //                 break;
+    //             case 32: // l1 float
+    //             case 33: // iono float
+    //             case 34: // narrow float
+    //                 state.status = AP_GPS::GPS_OK_FIX_3D_RTK_FLOAT;
+    //                 break;
+    //             case 48: // l1 int
+    //             case 49: // l1 int
+    //             case 50: // narrow int
+    //                 state.status = AP_GPS::GPS_OK_FIX_3D_RTK_FIXED;
+    //                 break;
+    //             case 0: // NONE
+    //             case 1: // FIXEDPOS
+    //             case 2: // FIXEDHEIGHT
+    //             default:
+    //                 state.status = AP_GPS::NO_FIX;
+    //                 break;
+    //         }
+    //     } else {
+    //         state.status = AP_GPS::NO_FIX;
+    //     }
         
-        _new_position = true;
-    }
+    //     _new_position = true;
+    // }
     if (messageid == 2118) // bestnav
     {
         const bestnav &bestnavu = nova_msg.data.bestnavu;
@@ -366,9 +395,24 @@ AP_GPS_NOVA::process_message(void)
         state.location.alt = (int32_t) (bestnavu.hgt * 100)-gps.alt_offset;
 
         state.num_sats = bestnavu.svsused;
-
-        state.horizontal_accuracy =norm(bestnavu.latsdev, bestnavu.lngsdev);// (float) ((bestnavu.latsdev + bestnavu.lngsdev)/4);
-        state.vertical_accuracy = (float) bestnavu.hgtsdev;
+        if(state.status == AP_GPS::GPS_OK_FIX_3D_RTK_FIXED)
+        {
+            state.horizontal_accuracy =norm(bestnavu.latsdev, bestnavu.lngsdev);// (float) ((bestnavu.latsdev + bestnavu.lngsdev)/4);
+            
+        }
+        else
+        {
+            state.horizontal_accuracy =(float) ((bestnavu.latsdev + bestnavu.lngsdev)/4.0);
+            if(bestnavu.hgtsdev >4)
+            {
+                state.vertical_accuracy = (float) (bestnavu.hgtsdev-4.0); 
+            }
+            else
+            {
+                state.vertical_accuracy = (float) bestnavu.hgtsdev;
+            } 
+        } 
+        //state.vertical_accuracy = (float) bestnavu.hgtsdev;
         state.have_horizontal_accuracy = true;
         state.have_vertical_accuracy = true;
         state.rtk_age_ms = bestnavu.diffage * 1000;
@@ -384,18 +428,20 @@ AP_GPS_NOVA::process_message(void)
                 case 17: // psrdiff
                 case 18: // waas
                 case 20: // omnistar
-                case 68: // ppp_converg
-                case 69: // ppp
+                // case 68: // ppp_converg
+                // case 69: // ppp
                     state.status = AP_GPS::GPS_OK_FIX_3D_DGPS;
                     break;
                 case 32: // l1 float
                 case 33: // iono float
                 case 34: // narrow float
+                case 68: // ppp_converg
                     state.status = AP_GPS::GPS_OK_FIX_3D_RTK_FLOAT;
                     break;
                 case 48: // l1 int
                 case 49: // l1 int
                 case 50: // narrow int
+                case 69: // ppp
                     state.status = AP_GPS::GPS_OK_FIX_3D_RTK_FIXED;
                     break;
                 case 0: // NONE
@@ -419,19 +465,19 @@ AP_GPS_NOVA::process_message(void)
         _new_speed = true;
         _new_position = true;
     }
-    if (messageid == 99) // bestvel
-    {
-        const bestvel &bestvelu = nova_msg.data.bestvelu;
+    // if (messageid == 99) // bestvel
+    // {
+    //     const bestvel &bestvelu = nova_msg.data.bestvelu;
 
-        state.ground_speed = (float) bestvelu.horspd;
-        state.ground_course = (float) bestvelu.trkgnd;
-        fill_3d_velocity();
-        state.velocity.z = -(float) bestvelu.vertspd;
-        state.have_vertical_velocity = true;
+    //     state.ground_speed = (float) bestvelu.horspd;
+    //     state.ground_course = (float) bestvelu.trkgnd;
+    //     fill_3d_velocity();
+    //     state.velocity.z = -(float) bestvelu.vertspd;
+    //     state.have_vertical_velocity = true;
         
-        _last_vel_time = (uint32_t) nova_msg.header.nova_headeru.tow;
-        _new_speed = true;
-    }
+    //     _last_vel_time = (uint32_t) nova_msg.header.nova_headeru.tow;
+    //     _new_speed = true;
+    // }
 
     if (messageid == 174) // psrdop
     {
@@ -449,14 +495,28 @@ AP_GPS_NOVA::process_message(void)
         state.vdop = (uint16_t) (stadopu.vdop*100);
         return false;
     }
-    if (messageid == 1657 || messageid == 972) // head
+    //if (messageid == 1657 || messageid == 972) // head
+    if (messageid == 972)
     {
         const heading3a &heading3au = nova_msg.data.heading3au;
         if(heading3au.solstat == 0 )//&& heading3au.postype == 50)
         {
+            // const float dist =heading3au.length;
+            // const float bearing = heading3au.heading + 180;//uh.heading;
+            // const float alt_diff = dist*tanf(radians(-heading3au.pitch));
+            // state.relPosHeading = bearing;
+            // state.relPosLength = dist;
+            // state.relPosD = alt_diff;
+            // state.relposheading_ts = AP_HAL::millis();
+            //if (calculate_moving_base_yaw(bearing, dist, alt_diff)) {
+            //     state.have_gps_yaw_accuracy = true;
+            //     state.gps_yaw_accuracy = heading3au.hdg_std;
+            // }
+
             state.gps_yaw = wrap_360(heading3au.heading + 180);
             state.have_gps_yaw = true;
-            state.gps_yaw_accuracy =  heading3au.hdg_std;
+            if(heading3au.hdg_std >4) state.gps_yaw_accuracy =  2;// heading3au.hdg_std;
+            else state.gps_yaw_accuracy = heading3au.hdg_std;
             state.have_gps_yaw_accuracy = true;
             state.gps_yaw_time_ms = AP_HAL::millis();
             state.gps_yaw_configured = true;

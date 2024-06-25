@@ -229,17 +229,57 @@ const AP_GPS_UBLOX::config_list AP_GPS_UBLOX::config_MB_Rover_uart2[] {
   we need to use B1C not B1 signal for Beidou on M10 to allow solid 5Hz,
   and also disable Glonass and enable QZSS
  */
+// const AP_GPS_UBLOX::config_list AP_GPS_UBLOX::config_M10[] {
+//  { ConfigKey::CFG_SIGNAL_BDS_ENA, 1},
+//  { ConfigKey::CFG_SIGNAL_BDS_B1_ENA, 0},
+//  { ConfigKey::CFG_SIGNAL_BDS_B1C_ENA, 1},
+//  { ConfigKey::CFG_SIGNAL_GLO_ENA, 1},
+//  { ConfigKey::CFG_SIGNAL_QZSS_ENA, 0},
+//  { ConfigKey::CFG_SIGNAL_QZSS_L1CA_ENA, 0},
+//  { ConfigKey::CFG_SIGNAL_QZSS_L1S_ENA, 0},
+//  { ConfigKey::CFG_NAVSPG_DYNMODEL, 8}, // Air < 4g
+// };
 const AP_GPS_UBLOX::config_list AP_GPS_UBLOX::config_M10[] {
+ { ConfigKey::CFG_SIGNAL_GPS_ENA, 1},
+ { ConfigKey::CFG_SIGNAL_GPS_L1CA_ENA, 1},
  { ConfigKey::CFG_SIGNAL_BDS_ENA, 1},
- { ConfigKey::CFG_SIGNAL_BDS_B1_ENA, 0},
- { ConfigKey::CFG_SIGNAL_BDS_B1C_ENA, 1},
- { ConfigKey::CFG_SIGNAL_GLO_ENA, 0},
- { ConfigKey::CFG_SIGNAL_QZSS_ENA, 1},
- { ConfigKey::CFG_SIGNAL_QZSS_L1CA_ENA, 1},
- { ConfigKey::CFG_SIGNAL_QZSS_L1S_ENA, 1},
- { ConfigKey::CFG_NAVSPG_DYNMODEL, 8}, // Air < 4g
+ { ConfigKey::CFG_SIGNAL_BDS_B1_ENA, 1},
+ { ConfigKey::CFG_SIGNAL_GLO_ENA, 1},
+ { ConfigKey::CFG_SIGNAL_GLO_L1_ENA, 1},
+ { ConfigKey::CFG_SIGNAL_GAL_ENA, 1},
+ { ConfigKey::CFG_SIGNAL_GAL_E1_ENA, 1},
+ { ConfigKey::CFG_NAVSPG_DYNMODEL, 9}, // Air < 4g
 };
-
+// const AP_GPS_UBLOX::config_list AP_GPS_UBLOX::config_M10[] {
+//  { ConfigKey::CFG_SIGNAL_GPS_ENA, 1},
+//  { ConfigKey::CFG_SIGNAL_GPS_L1CA_ENA, 1},
+//  { ConfigKey::CFG_SIGNAL_BDS_ENA, 1},
+//  { ConfigKey::CFG_SIGNAL_BDS_B1_ENA, 1},
+//  { ConfigKey::CFG_SIGNAL_BDS_B1C_ENA, 1},
+//  { ConfigKey::CFG_SIGNAL_GLO_ENA, 1},
+//  { ConfigKey::CFG_SIGNAL_GLO_L1_ENA, 1},
+//  { ConfigKey::CFG_SIGNAL_QZSS_ENA, 1},
+//  { ConfigKey::CFG_SIGNAL_QZSS_L1CA_ENA, 1},
+//  { ConfigKey::CFG_SIGNAL_QZSS_L1S_ENA, 1},
+//  { ConfigKey::CFG_SIGNAL_GAL_ENA, 1},
+//  { ConfigKey::CFG_SIGNAL_GAL_E1_ENA, 1},
+//  { ConfigKey::CFG_NAVSPG_DYNMODEL, 8}, // Air < 4g
+// };
+// const AP_GPS_UBLOX::config_list AP_GPS_UBLOX::config_M10[] {
+//  { ConfigKey::CFG_SIGNAL_GPS_ENA, 0},
+//  { ConfigKey::CFG_SIGNAL_GPS_L1CA_ENA, 0},
+//  { ConfigKey::CFG_SIGNAL_BDS_ENA, 1},
+//  { ConfigKey::CFG_SIGNAL_BDS_B1_ENA, 1},
+//  { ConfigKey::CFG_SIGNAL_BDS_B1C_ENA, 1},
+//  { ConfigKey::CFG_SIGNAL_GLO_ENA, 0},
+//  { ConfigKey::CFG_SIGNAL_GLO_L1_ENA, 0},
+//  { ConfigKey::CFG_SIGNAL_QZSS_ENA, 0},
+//  { ConfigKey::CFG_SIGNAL_QZSS_L1CA_ENA, 0},
+//  { ConfigKey::CFG_SIGNAL_QZSS_L1S_ENA, 0},
+//  { ConfigKey::CFG_SIGNAL_GAL_ENA, 1},
+//  { ConfigKey::CFG_SIGNAL_GAL_E1_ENA, 1},
+//  { ConfigKey::CFG_NAVSPG_DYNMODEL, 8}, // Air < 4g
+// };
 
 void
 AP_GPS_UBLOX::_request_next_config(void)

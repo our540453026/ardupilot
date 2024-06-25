@@ -17,7 +17,7 @@ public:
         ACRO =          1,  // manual body-frame angular rate with manual throttle
         ALT_HOLD =      2,  // manual airframe angle with automatic throttle
         AUTO =          3,  // fully automatic waypoint control using mission commands
-        OPENMV =        4,  // fully automatic fly to coordinate or fly at velocity/direction using GCS immediate commands
+        GUIDED =        4,  // fully automatic fly to coordinate or fly at velocity/direction using GCS immediate commands
         LOITER =        5,  // automatic horizontal acceleration with automatic throttle
         RTL =           6,  // automatic return to launching point
         CIRCLE =        7,  // automatic circular flight with automatic throttle
@@ -39,7 +39,7 @@ public:
         AUTOROTATE =   26,  // Autonomous autorotation
         AUTO_RTL =     27,  // Auto RTL, this is not a true mode, AUTO will report as this mode if entered to perform a DO_LAND_START Landing sequence
         TURTLE =       28,  // Flip over after crash
-        GUIDED =       29, //add openmv
+        OPENMV =       29, //add openmv
         // Mode number 127 reserved for the "drone show mode" in the Skybrush
         // fork at https://github.com/skybrush-io/ardupilot
     };

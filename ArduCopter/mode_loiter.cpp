@@ -86,10 +86,15 @@ void ModeLoiter::run()
     float target_roll, target_pitch;
     float target_yaw_rate = 0.0f;
     float target_climb_rate = 0.0f;
-
+    float target_climb_rc = 0.0f;
+    Vector3f veh;
+    static float hight=0.0;
     // set vertical speed and acceleration limits
     pos_control->set_max_speed_accel_z(-get_pilot_speed_dn(), g.pilot_speed_up, g.pilot_accel_z);
-
+    if(copter.ahrs_view->get_relative_position_NED_home(veh))
+    {
+        hight= abs(veh.z);
+    }
     // process pilot inputs unless we are in radio failsafe
     if (!copter.failsafe.radio) {
         // apply SIMPLE mode transform to pilot inputs
@@ -105,7 +110,9 @@ void ModeLoiter::run()
         target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->norm_input_dz());
 
         // get pilot desired climb rate
+        
         target_climb_rate = get_pilot_desired_climb_rate(channel_throttle->get_control_in());
+        target_climb_rc = target_climb_rate;
         target_climb_rate = constrain_float(target_climb_rate, -get_pilot_speed_dn(), g.pilot_speed_up);
     } else {
         // clear out pilot desired acceleration in case radio failsafe event occurs and we do not switch to RTL for some reason
@@ -193,7 +200,10 @@ void ModeLoiter::run()
 
         // update the vertical offset based on the surface measurement
         copter.surface_tracking.update_surface_offset();
-
+        if(hight <15 && target_climb_rc <-10)
+        {
+            target_climb_rate = constrain_float(-35, -get_pilot_speed_dn(), g.pilot_speed_up);
+        }
         // Send the commanded climb rate to the position controller
         pos_control->set_pos_target_z_from_climb_rate_cm(target_climb_rate);
         break;

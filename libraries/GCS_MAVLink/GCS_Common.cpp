@@ -2827,6 +2827,8 @@ MAV_STATE GCS_MAVLINK::system_status() const
  */
 void GCS_MAVLINK::send_heartbeat() const
 {
+    static char stream_count=0;
+    mavlink_request_data_stream_t mavlink_request_data_stream;
     mavlink_msg_heartbeat_send(
         chan,
         gcs().frame_type(),
@@ -2834,6 +2836,40 @@ void GCS_MAVLINK::send_heartbeat() const
         base_mode(),
         gcs().custom_mode(),
         system_status());
+    if(stream_count<10)
+    {
+        mavlink_request_data_stream.req_message_rate=4;
+        mavlink_request_data_stream.target_system=33;
+        mavlink_request_data_stream.target_component=0x00;
+        mavlink_request_data_stream.req_stream_id =0;
+        mavlink_request_data_stream.start_stop =1;
+        mavlink_msg_request_data_stream_send_struct(chan,&mavlink_request_data_stream);
+        mavlink_request_data_stream.req_message_rate=4;
+        mavlink_request_data_stream.target_system=0x01;
+        mavlink_request_data_stream.target_component=0x9A;
+        mavlink_request_data_stream.req_stream_id =0x04;
+        mavlink_request_data_stream.start_stop =1;
+        mavlink_msg_request_data_stream_send_struct(chan,&mavlink_request_data_stream);
+        mavlink_request_data_stream.req_message_rate=4;
+        mavlink_request_data_stream.target_system=0x01;
+        mavlink_request_data_stream.target_component=0x9A;
+        mavlink_request_data_stream.req_stream_id =0x0A;
+        mavlink_request_data_stream.start_stop =1;
+        mavlink_msg_request_data_stream_send_struct(chan,&mavlink_request_data_stream);
+        mavlink_request_data_stream.req_message_rate=4;
+        mavlink_request_data_stream.target_system=0x01;
+        mavlink_request_data_stream.target_component=0x9A;
+        mavlink_request_data_stream.req_stream_id =0x0B;
+        mavlink_request_data_stream.start_stop =1;
+        mavlink_msg_request_data_stream_send_struct(chan,&mavlink_request_data_stream);
+        mavlink_request_data_stream.req_message_rate=4;
+        mavlink_request_data_stream.target_system=0x01;
+        mavlink_request_data_stream.target_component=0x9A;
+        mavlink_request_data_stream.req_stream_id =0x0C;
+        mavlink_request_data_stream.start_stop =1;
+        mavlink_msg_request_data_stream_send_struct(chan,&mavlink_request_data_stream);
+        stream_count++;
+    }
 }
 
 MAV_RESULT GCS_MAVLINK::handle_command_do_aux_function(const mavlink_command_long_t &packet)
@@ -4690,6 +4726,7 @@ MAV_RESULT GCS_MAVLINK::handle_command_do_set_home(const mavlink_command_long_t 
     if (!set_home(new_home_loc, true)) {
         return MAV_RESULT_FAILED;
     }
+    
     return MAV_RESULT_ACCEPTED;
 }
 

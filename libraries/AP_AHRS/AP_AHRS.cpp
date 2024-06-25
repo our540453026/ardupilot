@@ -2380,7 +2380,18 @@ bool AP_AHRS::attitudes_consistent(char *failure_msg, const uint8_t failure_msg_
             }
         }
     }
-
+    Vector3f euler;
+    float euler_yaw,yaw_deg;
+    AP::ahrs().get_secondary_attitude(euler);
+    euler_yaw =(uint16_t)(wrap_360_cd(degrees(euler.z)*100));
+    yaw_deg = wrap_360(degrees(AP::ahrs().get_yaw()))*100.0f;
+    int val =fabsf(euler_yaw-yaw_deg)/100;
+    if(val>90 && val<270)
+    {
+        hal.util->snprintf(failure_msg, failure_msg_len, "yaw inconsistent %d d Need change takeoff point ",val);
+        //gcs().send_text(MAV_SEVERITY_INFO,"um head unsol");
+        return false;
+    }
     return true;
 }
 

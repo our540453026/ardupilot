@@ -871,6 +871,7 @@ private:
 #endif // GPS_MOVING_BASELINE
 
     static const config_list config_M10[];
+    static const config_list config_M10_BD[];
 };
 
 #endif

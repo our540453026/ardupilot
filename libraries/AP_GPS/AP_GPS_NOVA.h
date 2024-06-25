@@ -21,7 +21,7 @@
 
 #include "AP_GPS.h"
 #include "GPS_Backend.h"
-
+#define GPS_CONFIG_MESSAGE_NUM 34
 #if AP_GPS_NOVA_ENABLED
 class AP_GPS_NOVA : public AP_GPS_Backend
 {
@@ -55,7 +55,7 @@ private:
     
     uint8_t _init_blob_index = 0;
     uint32_t _init_blob_time = 0;
-    static const char* const _initialisation_blob[31];
+    static const char* const _initialisation_blob[GPS_CONFIG_MESSAGE_NUM];
    
     uint32_t crc_error_counter = 0;
     uint32_t nova_crc;
