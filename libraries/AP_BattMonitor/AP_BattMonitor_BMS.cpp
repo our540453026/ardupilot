@@ -31,10 +31,10 @@ AP_BattMonitor_BMS::read()
     _state.consumed_mah = serialConc->bms_state.capacity_full-serialConc->bms_state.capacity_remaining;//剩余容量
     _state.consumed_wh = serialConc->bms_state.capacity_full;  //总容量
     _state.last_time_micros = serialConc->bms_state.time_s;
-    _state.temperature = serialConc->bms_state.bat_temp1;
+    _state.temperature = serialConc->bms_state.bat_temp;
     _state.resistance = serialConc->bms_state.id;
     _state.temperature_time = AP_HAL::millis();
-    for(int i=0;i<12;i++)
+    for(int i=0;i<14;i++)
     {
         _state.cell_voltages.cells[i] = serialConc->bms_state.cell_vot[i];
 

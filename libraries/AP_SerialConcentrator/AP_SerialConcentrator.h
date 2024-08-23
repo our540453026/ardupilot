@@ -60,6 +60,7 @@
 #define UAV_ESC_MSG_ID     0x000E
 #define BMS_TYPE 	0x02
 #define BMS_STATUE_MSG_ID   0x0101
+#define BMS_STATUE2_MSG_ID   0x0104
 #define BMS_ABNORMAL_MSG_ID   0x0102
 #define CAMERA_TYPE 0x03
 #define CAMERA_SHUTTER_MSG_ID   0x0201
@@ -152,6 +153,35 @@ public:
             uint8_t type;                    // stage failsafe the battery is in
 
         };
+    struct PACKED bms2_t
+        {
+            uint32_t id;
+            uint32_t time_s;	
+            uint16_t voltages; /*<  Type voltage of the battery*/
+            uint16_t cell_vot[18]; /*< [mV] Battery voltage of cells. Cells above the valid cell count for this battery should have the UINT16_MAX value.*/
+            uint16_t current_battery; /*< [mA] Battery current, -1: autopilot does not measure the current*/		
+            uint16_t capacity_full; /*< [mAh] full capacity of the battery..*/	
+            uint16_t capacity_remaining; /*< [mAh]  remaining capacity of the battery..*/	
+            uint16_t cycle;
+            uint16_t charge_count; /*<  charge of count*/
+            uint16_t discharge_count; /*<  discharge of count.*/	
+            int8_t	bat_temp1;
+            int8_t 	bat_temp2;
+            int8_t 	pcb_temp1;
+            int8_t 	pcb_temp2;
+            uint8_t type;                    // stage failsafe the battery is in
+        };
+    struct PACKED bms_staute_t
+        {
+            uint32_t id;
+            uint32_t time_s;	
+            uint32_t voltages; /*<  Type voltage of the battery*/
+            uint16_t cell_vot[18]; /*< [mV] Battery voltage of cells. Cells above the valid cell count for this battery should have the UINT16_MAX value.*/
+            uint32_t current_battery; /*< [mA] Battery current, -1: autopilot does not measure the current*/		
+            uint32_t capacity_full; /*< [mAh] full capacity of the battery..*/	
+            uint32_t capacity_remaining; /*< [mAh]  remaining capacity of the battery..*/	
+            int8_t	bat_temp;
+        };
     uint32_t        _last_update_time;
     bool    Tx_urgent_statue = false;
     typedef struct
@@ -181,14 +211,14 @@ public:
     void send_gimbal_data(gimbal_t gimbal);
     void send_gimbal_st_data(gimbal_st_t gimbal);
     bool update(void);
-    bms_t bms_state;
+    bms_staute_t bms_state;
     gimbal_t gimbal_state;
     gimbal_st_t gimbal_st_u;
     static AP_SerialConcentrator *get_singleton(void) { return _singleton; }
 private:
     uint16_t g_crc_val,test_counter;
-    int32_t swapInt32( int32_t value);
-    int16_t swapInt16( int16_t value);
+    uint32_t swapInt32( uint32_t value);
+    uint16_t swapInt16( uint16_t value);
     uint16_t swapuInt16( uint16_t value);
     float swap_fl_bits(float value) ;
     uint8_t delay_n,dug,gimbal_hz,resend_gimbal_hz,test_flag;
@@ -204,6 +234,7 @@ private:
     static AP_SerialConcentrator *_singleton;
     union PACKED msgbuffer {
                 bms_t bms;
+                bms2_t bms2;
                 gimbal_ack_t gimbal_ack_u;
                 gimbal_st_t gimbal_st_u;
                 esc_st_t esc_st;

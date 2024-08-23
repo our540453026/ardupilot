@@ -21,7 +21,7 @@
 
 #include "AP_GPS.h"
 #include "GPS_Backend.h"
-#define GPS_CONFIG_MESSAGE_NUM 34
+#define GPS_CONFIG_MESSAGE_NUM 35
 #if AP_GPS_NOVA_ENABLED
 class AP_GPS_NOVA : public AP_GPS_Backend
 {

@@ -77,15 +77,17 @@ const char* const AP_GPS_NOVA::_initialisation_blob[GPS_CONFIG_MESSAGE_NUM] {
     "UNIHEADINGB 0.05\r\n"
     "COM COM1 460800\r\n",
     "unlogall com1 \r\n",
-    "GPSEPHB COM1 10 \r\n",
-	"BD3EPHB COM1 11 \r\n",
-	"BDSEPHB COM1 12 \r\n",
-	"GLOEPHB COM1 13 \r\n",
-	"GALEPHB COM1 14 \r\n",
-    "LOG COM1 GPSEPHEMB ONTIME 280\r\n",
-    "LOG COM1 GLOEPHEMERISB ONTIME 290\r\n",
-    "LOG COM1 GALEPHEMERISB ONTIME 300\r\n",
-    "LOG COM1 BD2EPHEMB ONTIME 310\r\n",
+    "LOG COM1 GLOEPHEMERISB ONTIME 16\r\n",
+    "LOG COM1 GALEPHEMERISB ONTIME 17\r\n",
+	"LOG COM1 BDSEPHEMERISB ONTIME 18\r\n",
+	"LOG COM1 QZSSEPHEMERISB ONTIME 19\r\n",
+	"GPSEPHEMB COM1 20\r\n",
+	"GLOEPHEMB COM1 21\r\n",
+	"BDSEPHEMB COM1 22\r\n",
+	"GALEPHEMB COM1 23\r\n",
+	"BD2EPHEMB COM1 24\r\n",
+	"BD3EPHEMB COM1 25\r\n",
+	//"RAWEPHEMB COM1 15 \r\n",
     "LOG COM1 RANGECMPB ONTIME 0.2\r\n",
     "LOG COM1 GPGGA ONTIME 0.2\r\n",
     "LOG COM1 GPRMC ONTIME 1\r\n",
@@ -95,11 +97,12 @@ const char* const AP_GPS_NOVA::_initialisation_blob[GPS_CONFIG_MESSAGE_NUM] {
     "LOG COM1 EVENTMARKB ONCHANGED\r\n",
     "CONFIG EVENT ENABLE NEGATIVE 500\r\n",
     "CONFIG PPS ENABLE GPS POSITIVE 10000 1000 0 0\r\n",
-    "config nmeaversion v31\r\n", 
+    //"config nmeaversion v31\r\n",
+    "config nmeaversion v410\r\n", 
     "CONFIG RTK TIMEOUT 600 \r\n",
     // "CONFIG PPP ENABLE B2B-PPP\r\n",
     // "CONFIG PPP CONVERGE 20 20\r\n",
-    // "CONFIG SIGNALGROUP 3 6\r\n",
+    //"CONFIG SIGNALGROUP 3 6\r\n",
 
     // "pppnava com1 1\r\n"
     
@@ -395,29 +398,6 @@ AP_GPS_NOVA::process_message(void)
         state.location.alt = (int32_t) (bestnavu.hgt * 100)-gps.alt_offset;
 
         state.num_sats = bestnavu.svsused;
-        if(state.status == AP_GPS::GPS_OK_FIX_3D_RTK_FIXED)
-        {
-            state.horizontal_accuracy =norm(bestnavu.latsdev, bestnavu.lngsdev);// (float) ((bestnavu.latsdev + bestnavu.lngsdev)/4);
-            
-        }
-        else
-        {
-            state.horizontal_accuracy =(float) ((bestnavu.latsdev + bestnavu.lngsdev)/4.0);
-            if(bestnavu.hgtsdev >4)
-            {
-                state.vertical_accuracy = (float) (bestnavu.hgtsdev-4.0); 
-            }
-            else
-            {
-                state.vertical_accuracy = (float) bestnavu.hgtsdev;
-            } 
-        } 
-        //state.vertical_accuracy = (float) bestnavu.hgtsdev;
-        state.have_horizontal_accuracy = true;
-        state.have_vertical_accuracy = true;
-        state.rtk_age_ms = bestnavu.diffage * 1000;
-        state.rtk_num_sats = bestnavu.svsused;
-
         if (bestnavu.solstat == 0) // have a solution
         {
             switch (bestnavu.postype)
@@ -454,6 +434,30 @@ AP_GPS_NOVA::process_message(void)
         } else {
             state.status = AP_GPS::NO_FIX;
         }
+        if(state.status == AP_GPS::GPS_OK_FIX_3D_RTK_FIXED)
+        {
+            state.horizontal_accuracy =norm(bestnavu.latsdev, bestnavu.lngsdev);// (float) ((bestnavu.latsdev + bestnavu.lngsdev)/4);
+            
+        }
+        else
+        {
+            state.horizontal_accuracy =(float) ((bestnavu.latsdev + bestnavu.lngsdev)/4.0);
+            
+        } 
+        if(bestnavu.hgtsdev >4)
+        {
+            state.vertical_accuracy = (float) (bestnavu.hgtsdev-4.0); 
+        }
+        else
+        {
+            state.vertical_accuracy = (float) bestnavu.hgtsdev;
+        } 
+        //state.vertical_accuracy = (float) bestnavu.hgtsdev;
+        state.have_horizontal_accuracy = true;
+        state.have_vertical_accuracy = true;
+        state.rtk_age_ms = bestnavu.diffage * 1000;
+        state.rtk_num_sats = bestnavu.svsused;
+
         state.ground_speed = (float) bestnavu.horspd;
         state.ground_course = (float) bestnavu.trkgnd;
         fill_3d_velocity();

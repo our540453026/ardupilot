@@ -34,7 +34,7 @@ extern const AP_HAL::HAL& hal;
 AP_SerialConcentrator::AP_SerialConcentrator()
 {
    _port = NULL;
-   bms_state.cycle = 0;
+   //bms_state.cycle = 0;
    test_flag =0;
    gimbal_state.Cam_num=0;
    if (_singleton != nullptr) {
@@ -44,14 +44,14 @@ AP_SerialConcentrator::AP_SerialConcentrator()
    link_init();
 }
 
-int32_t AP_SerialConcentrator::swapInt32( int32_t value)
+uint32_t AP_SerialConcentrator::swapInt32( uint32_t value)
 {
     return ((value & 0x000000FF) << 24) |
     ((value & 0x0000FF00) << 8) |
     ((value & 0x00FF0000) >> 8) |
     ((value & 0xFF000000) >> 24) ;
 }
-int16_t AP_SerialConcentrator::swapInt16( int16_t value)
+uint16_t AP_SerialConcentrator::swapInt16( uint16_t value)
 {
     return ((value & 0x00FF) << 8) |
     ((value & 0xFF00) >> 8) ;
@@ -425,27 +425,42 @@ bool AP_SerialConcentrator::Data_Message_Process(void)
     switch(data_msg.msgid)
     {
         case BMS_STATUE_MSG_ID:
-            bms_state.voltages = swapInt16(data_msg.data.bms.voltages);
-            bms_state.charge_count = swapInt16(data_msg.data.bms.charge_count);
+            bms_state.voltages = (swapInt16(data_msg.data.bms.voltages) & 0x0000FFFF);
+            //bms_state.charge_count = swapInt16(data_msg.data.bms.charge_count);
             bms_state.capacity_remaining = swapInt16(data_msg.data.bms.capacity_remaining);
             bms_state.capacity_full = swapInt16(data_msg.data.bms.capacity_full);
             bms_state.current_battery = swapInt16(data_msg.data.bms.current_battery);
-            bms_state.cycle = swapInt16(data_msg.data.bms.cycle);
-            bms_state.discharge_count = swapInt16(data_msg.data.bms.discharge_count);
+            // bms_state.cycle = swapInt16(data_msg.data.bms.cycle);
+            // bms_state.discharge_count = swapInt16(data_msg.data.bms.discharge_count);
             bms_state.id = swapInt32(data_msg.data.bms.id);
             for(int i=0;i<15;i++)
             {
                 bms_state.cell_vot[i] =swapInt16(data_msg.data.bms.cell_vot[i]);
 
             }
-            bms_state.bat_temp1 = data_msg.data.bms.bat_temp1;
-            bms_state.bat_temp2 = data_msg.data.bms.bat_temp2;
-            bms_state.pcb_temp1 = data_msg.data.bms.pcb_temp1;
-            bms_state.pcb_temp2 = data_msg.data.bms.pcb_temp2;
-            bms_state.type = data_msg.data.bms.type;
+            bms_state.bat_temp = data_msg.data.bms.bat_temp1;
             bms_state.time_s = AP_HAL::micros();
             test_counter++;
-            //gcs().send_text(MAV_SEVERITY_INFO,"bmsupdateok=%ld,%ld",bms_state.id,data_msg.data.bms.id);
+            //gcs().send_text(MAV_SEVERITY_INFO,"bmsupdateok=%ld,%d",bms_state.voltages,bms_state.cell_vot[0]);
+            
+            break;
+        case BMS_STATUE2_MSG_ID:
+            bms_state.voltages = (swapInt16(data_msg.data.bms2.voltages)& 0x0000FFFF)*10;
+            //bms_state.charge_count = swapInt16(data_msg.data.bms.charge_count);
+            bms_state.capacity_remaining = swapInt16(data_msg.data.bms2.capacity_remaining);
+            bms_state.capacity_full = swapInt16(data_msg.data.bms2.capacity_full);
+            bms_state.current_battery = swapInt16(data_msg.data.bms2.current_battery)*10;
+            // bms_state.cycle = swapInt16(data_msg.data.bms.cycle);
+            // bms_state.discharge_count = swapInt16(data_msg.data.bms.discharge_count);
+            bms_state.id = swapInt32(data_msg.data.bms2.id);
+            for(int i=0;i<18;i++)
+            {
+                bms_state.cell_vot[i] =swapInt16(data_msg.data.bms2.cell_vot[i]);
+
+            }
+            bms_state.bat_temp = data_msg.data.bms2.bat_temp1;
+            bms_state.time_s = AP_HAL::micros();
+            //gcs().send_text(MAV_SEVERITY_INFO,"bmsupdateok=%ld,%d,%d,%ld,%ld",bms_state.voltages,bms_state.cell_vot[0],bms_state.bat_temp,bms_state.capacity_remaining,bms_state.capacity_full);
             
             break;
         case COMP_PASSTHROUGH_MSG_ID:
