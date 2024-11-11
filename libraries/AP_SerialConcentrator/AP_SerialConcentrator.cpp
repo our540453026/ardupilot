@@ -510,14 +510,14 @@ bool AP_SerialConcentrator::Data_Message_Process(void)
             EnMesQueue(&usart_rx_fifo,data_msg.length);
             EnMesQueue(&usart_rx_fifo,data_msg.comptype);
             EnMesQueue(&usart_rx_fifo,0x02);
-            EnMesQueue(&usart_rx_fifo,0x08);
+            EnMesQueue(&usart_rx_fifo,0x0A);
             for(int i = 0; i <len;i++) 
             {
                 EnMesQueue(&usart_rx_fifo,data_msg.data.bytes[i]);
             }
             EnMesQueue(&usart_rx_fifo,data_msg.crc>>8);
             EnMesQueue(&usart_rx_fifo,data_msg.crc);
-            //gcs().send_text(MAV_SEVERITY_INFO,"rec:pitch=%f,roll=%f,yaw=%f",swap_fl_bits(data_msg.data.gimbal_st_u.pitch),swap_fl_bits(data_msg.data.gimbal_st_u.roll),swap_fl_bits(data_msg.data.gimbal_st_u.yaw));
+            //gcs().send_text(MAV_SEVERITY_INFO,"rec:pitch=%f,roll=%f,yaw=%f",swap_fl_bits(data_msg.data.gimbal_st_u.pitch),swap_fl_bits(data_msg.data.gimbal_st_u.roll),wrap_360(swap_fl_bits(data_msg.data.gimbal_st_u.yaw)));
             test_flag=1;
             break;
         case UAV_RTK_RAW_MSG_ID:

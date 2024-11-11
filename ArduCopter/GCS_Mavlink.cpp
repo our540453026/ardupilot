@@ -1441,7 +1441,7 @@ void GCS_MAVLINK_Copter::handleMessage(const mavlink_message_t &msg)
         mavlink_msg_attitude_decode(&msg,&packet);
         copter.serial_concentrator.gimbal_st_u.pitch=degrees(packet.pitch);//*57.32;
         copter.serial_concentrator.gimbal_st_u.roll=degrees(packet.roll);//*57.32;
-        copter.serial_concentrator.gimbal_st_u.yaw=degrees(copter.ahrs.get_yaw());//0 - packet.yaw*57.32;
+        copter.serial_concentrator.gimbal_st_u.yaw=degrees(copter.ahrs.get_yaw()+ packet.yaw);//0 - packet.yaw*57.32;
         copter.serial_concentrator.send_gimbal_st_data(copter.serial_concentrator.gimbal_st_u);
         //gcs().send_text(MAV_SEVERITY_INFO,"pitch:%f,roll:%f,yaw:%f",packet.pitch*57.32,packet.roll*57.32,packet.yaw*57.32);
         break;
