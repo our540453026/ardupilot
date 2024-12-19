@@ -493,7 +493,7 @@ void GCS_MAVLINK::send_v2_extension()
         {
             mavlink_v2_extension.payload[0] = LINK_LENGTH - 1;//send data length 有效数据长度
             mavlink_msg_v2_extension_send_struct(chan,&mavlink_v2_extension);
-            //gcs().send_text(MAV_SEVERITY_CRITICAL,"v3_ex=%d,%ld",send_v2_extension_index,AP_HAL::micros());
+           // gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_ex=%d,%d,%d",mavlink_v2_extension.target_system,mavlink_v2_extension.target_network,mavlink_v2_extension.target_component);
             send_v2_extension_index = 1; 
             memset(mavlink_v2_extension.payload,0,LINK_LENGTH);          
             //gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_extension=%d",send_v2_extension_index);
@@ -534,7 +534,8 @@ void GCS_MAVLINK::send_v2_extension()
         // {
         //     gcs().send_text(MAV_SEVERITY_INFO,"%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",mavlink_v2_extension.payload[i],mavlink_v2_extension.payload[i+1],mavlink_v2_extension.payload[i+2],mavlink_v2_extension.payload[i+3],mavlink_v2_extension.payload[i+4],mavlink_v2_extension.payload[i+5],mavlink_v2_extension.payload[i+6],mavlink_v2_extension.payload[i+7],mavlink_v2_extension.payload[i+8],mavlink_v2_extension.payload[i+9]);
         // }
-
+       // gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_ex=%d,%d,%d",mavlink_v2_extension.target_system,mavlink_v2_extension.target_network,mavlink_v2_extension.target_component);
+            
         send_v2_extension_index = 1;
         memset(mavlink_v2_extension.payload,0,LINK_LENGTH); 
         serialConcentrator->Tx_urgent_statue = false;

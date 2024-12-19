@@ -151,7 +151,7 @@ void AP_Mount_SToRM32::send_do_mount_control(const MountTarget& angle_target_rad
                                   degrees(angle_target_rad.roll),
                                   -degrees(get_bf_yaw_angle(angle_target_rad)),
                                   0, 0, 0,  // param4 ~ param6 unused
-                                  MAV_MOUNT_MODE_MAVLINK_TARGETING);
+                                  get_mode());//
 
     // store time of send
     _last_send = AP_HAL::millis();

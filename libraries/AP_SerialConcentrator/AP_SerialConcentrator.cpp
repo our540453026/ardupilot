@@ -479,7 +479,7 @@ bool AP_SerialConcentrator::Data_Message_Process(void)
             }
             EnMesQueue(&usart_rx_fifo,data_msg.crc>>8);
             EnMesQueue(&usart_rx_fifo,data_msg.crc);
-            //gcs().send_text(MAV_SEVERITY_INFO,"pass len:%x crc:%x",data_msg.length,data_msg.crc);
+            //gcs().send_text(MAV_SEVERITY_INFO,"pass len:%x id:%x %x",data_msg.length,data_msg.data.bytes[5],data_msg.data.bytes[6]);
             break;
         case UAV_TEMP_MSG_ID:
             //delay_n++;
@@ -586,6 +586,7 @@ bool AP_SerialConcentrator::Data_Message_Process(void)
             }
             EnMesQueue(&usart_rx_fifo,data_msg.crc>>8);
             EnMesQueue(&usart_rx_fifo,data_msg.crc);
+            //gcs().send_text(MAV_SEVERITY_INFO,"ack=%02X,%02X",data_msg.data.bytes[0],data_msg.data.bytes[1]);
             Tx_urgent_statue = true;
             ack_id= swapuInt16(data_msg.data.gimbal_ack_u.ack_cmd);
             switch(ack_id)
@@ -609,9 +610,23 @@ bool AP_SerialConcentrator::Data_Message_Process(void)
                     break;
 
             }
-            //gcs().send_text(MAV_SEVERITY_INFO,"ack=%ld",AP_HAL::micros());
+            
             break;       
         default:
+            len = data_msg.length-5;
+            EnMesQueue(&usart_rx_fifo,0xAB);
+            EnMesQueue(&usart_rx_fifo,0xCB);
+            EnMesQueue(&usart_rx_fifo,(data_msg.length>>8));
+            EnMesQueue(&usart_rx_fifo,data_msg.length);
+            EnMesQueue(&usart_rx_fifo,data_msg.comptype);
+            EnMesQueue(&usart_rx_fifo,(uint8_t) (data_msg.msgid>>8));
+            EnMesQueue(&usart_rx_fifo,(uint8_t) data_msg.msgid);
+            for(int i = 0; i <len;i++) 
+            {
+                EnMesQueue(&usart_rx_fifo,data_msg.data.bytes[i]);
+            }
+            EnMesQueue(&usart_rx_fifo,data_msg.crc>>8);
+            EnMesQueue(&usart_rx_fifo,data_msg.crc);
             break;
     }
     return true;
