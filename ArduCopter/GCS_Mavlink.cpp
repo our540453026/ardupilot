@@ -1421,7 +1421,7 @@ void GCS_MAVLINK_Copter::handleMessage(const mavlink_message_t &msg)
         {
             mavlink_v2_extension_t packet;
             mavlink_msg_v2_extension_decode(&msg,&packet);
-            if(packet.message_type == 32768)
+            //if(packet.message_type == 32768)
             {
                 //copter.serial_concentrator.send_data(packet.payload,msg.len);
                 copter.serial_concentrator.send_data(&packet.payload[1],packet.payload[0]);

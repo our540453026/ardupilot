@@ -489,13 +489,18 @@ void GCS_MAVLINK::send_v2_extension()
     while(serialConcentrator->usart_serial_available(&dat))
     {
         mavlink_v2_extension.payload[send_v2_extension_index++] = dat;
+        mavlink_v2_extension.message_type =0x00;
         if(send_v2_extension_index >= LINK_LENGTH) //
         {
             mavlink_v2_extension.payload[0] = LINK_LENGTH - 1;//send data length 有效数据长度
             mavlink_msg_v2_extension_send_struct(chan,&mavlink_v2_extension);
-           // gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_ex=%d,%d,%d",mavlink_v2_extension.target_system,mavlink_v2_extension.target_network,mavlink_v2_extension.target_component);
+            // gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_ex=%d,%d,%d,id:%02x,%02x",mavlink_v2_extension.target_system,mavlink_v2_extension.target_network,mavlink_v2_extension.target_component,mavlink_v2_extension.payload[8],mavlink_v2_extension.payload[9]);
+            // gcs().send_text(MAV_SEVERITY_INFO,"len:%d,%02x %02x ",mavlink_v2_extension.payload[0],mavlink_v2_extension.payload[1],mavlink_v2_extension.payload[2]);
+       
+            //gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_ex=%d,%d,%d",mavlink_v2_extension.target_system,mavlink_v2_extension.target_network,mavlink_v2_extension.target_component);
             send_v2_extension_index = 1; 
-            memset(mavlink_v2_extension.payload,0,LINK_LENGTH);          
+            memset(mavlink_v2_extension.payload,0,LINK_LENGTH);
+            return;          
             //gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_extension=%d",send_v2_extension_index);
         }
         /*else
@@ -532,13 +537,14 @@ void GCS_MAVLINK::send_v2_extension()
         // gcs().send_text(MAV_SEVERITY_INFO,"re");
         // for(int i = 1; i <mavlink_v2_extension.payload[0];i=i+10)
         // {
-        //     gcs().send_text(MAV_SEVERITY_INFO,"%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",mavlink_v2_extension.payload[i],mavlink_v2_extension.payload[i+1],mavlink_v2_extension.payload[i+2],mavlink_v2_extension.payload[i+3],mavlink_v2_extension.payload[i+4],mavlink_v2_extension.payload[i+5],mavlink_v2_extension.payload[i+6],mavlink_v2_extension.payload[i+7],mavlink_v2_extension.payload[i+8],mavlink_v2_extension.payload[i+9]);
+            // gcs().send_text(MAV_SEVERITY_INFO,"chan:%d,len:%d,%02x %02x ",chan,mavlink_v2_extension.payload[0],mavlink_v2_extension.payload[1],mavlink_v2_extension.payload[2]);
         // }
-       // gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_ex=%d,%d,%d",mavlink_v2_extension.target_system,mavlink_v2_extension.target_network,mavlink_v2_extension.target_component);
+        //gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_ex=%d,%d,%d,id:%02x,%02x",mavlink_v2_extension.target_system,mavlink_v2_extension.target_network,mavlink_v2_extension.target_component,mavlink_v2_extension.payload[8],mavlink_v2_extension.payload[9]);
             
         send_v2_extension_index = 1;
         memset(mavlink_v2_extension.payload,0,LINK_LENGTH); 
         serialConcentrator->Tx_urgent_statue = false;
+        return;
         
     }
     //gcs().send_text(MAV_SEVERITY_CRITICAL,"v4_ex=%d,%ld",send_v2_extension_index,AP_HAL::micros());

@@ -499,7 +499,7 @@ public:
     // var_info for holding Parameter information
     static const struct AP_Param::GroupInfo var_info[];
     static const struct AP_Param::GroupInfo var_info2[];
-
+    static const struct AP_Param::GroupInfo var_info3[];
     // altitude at which nav control can start in takeoff
     AP_Float wp_navalt_min;
 
@@ -686,6 +686,12 @@ public:
 
     // ramp time of throttle during take-off
     AP_Float takeoff_throttle_slew_time;
+    AP_Int32 openmv_lat;
+    AP_Int32 openmv_lng;
+    AP_Float openmv_alt;
+    AP_Int16 openmv_max_time;
+    AP_Int16 openmv_max_count;
+    AP_Int8 openmv_safe;
 #if HAL_WITH_ESC_TELEM && FRAME_CONFIG != HELI_FRAME
     AP_Int16 takeoff_rpm_min;
 #endif

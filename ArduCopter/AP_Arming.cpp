@@ -54,7 +54,15 @@ bool AP_Arming_Copter::run_pre_arm_checks(bool display_failure)
     if (checks_to_perform == 0) {
         return mandatory_checks(display_failure);
     }
-
+    if( copter.g2.openmv_safe)
+    {
+        if(!hal.gpio->read(6))
+        {
+            check_failed(display_failure, "Safety Switch");
+            return false;
+        }
+        
+    }
     return parameter_checks(display_failure)
         & oa_checks(display_failure)
         & gcs_failsafe_check(display_failure)
@@ -305,6 +313,7 @@ bool AP_Arming_Copter::parameter_checks(bool display_failure)
             check_failed(ARMING_CHECK_PARAMETERS, display_failure, "Bad parameter: %s", failure_msg);
             return false;
         }
+        
     }
 
     return true;
@@ -650,7 +659,11 @@ bool AP_Arming_Copter::arm_checks(AP_Arming::Method method)
         check_failed(true, "Safety Switch");
         return false;
     }
-
+    // if(!hal.gpio->read(6) && copter.g2.openmv_safe)
+    // {
+    //     check_failed(true, "Safety Switch");
+    //     return false;
+    // }
     // superclass method should always be the last thing called; it
     // has side-effects which would need to be cleaned up if one of
     // our arm checks failed

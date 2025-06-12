@@ -25,6 +25,8 @@
 //#include <../ArduCopter/Copter.h>
 #include "AP_SerialConcentrator.h"
 #include <AP_ESC_Telem/AP_ESC_Telem.h>
+#include <AP_BoardConfig/AP_BoardConfig.h>
+#include <AP_HAL/AP_HAL.h>
 #define AP_SerialConcentrator_BAUD           115200
 #define AP_SerialConcentrator_BUFSIZE_RX     256
 #define AP_SerialConcentrator_BUFSIZE_TX     256
@@ -309,6 +311,18 @@ void AP_SerialConcentrator::update_disconnect(void)
           //gcs().send_text(MAV_SEVERITY_INFO,"bmsupdate3=%ld,%ld",_last_update_time,bms_state.time_s); 
           bms_state.time_s = _last_update_time +10000000; 
     }
+    for(uint8_t i=0;i<8;i++)
+    {
+        if(AP_HAL::millis()- openmv_data[i].last_update_time >2000)
+        {
+            openmv_data[i].active=0;
+            openmv_data[i].id=0;
+            openmv_data[i].x=0;
+            openmv_data[i].y=0;
+            openmv_data[i].r=0;
+            openmv_data[i].last_update_time = AP_HAL::millis();
+        }
+    }
 }
 uint16_t AP_SerialConcentrator::crcSum(uint8_t *dat,uint8_t n)
 {
@@ -361,7 +375,7 @@ bool AP_SerialConcentrator::parse(uint8_t temp)
                     data_msg.rec_state = data_msg_parser::COMPTYPE;
                     data_msg.length += temp;
                     g_crc_val += temp;
-                    if(data_msg.length >= 512) //错误处理
+                    if(data_msg.length >= 250) //错误处理
                     {
                         gcs().send_text(MAV_SEVERITY_INFO,"bms_error len=%d,id=%x",data_msg.length,data_msg.msgid);
                         data_msg.rec_state = data_msg_parser::PREAMBLE1;
@@ -422,6 +436,8 @@ bool AP_SerialConcentrator::Data_Message_Process(void)
 {
     uint16_t ack_id;
     int len; 
+    int num;
+    //gcs().send_text(MAV_SEVERITY_INFO,"bmsupdateok=%d",hal.gpio->read(61));
     switch(data_msg.msgid)
     {
         case BMS_STATUE_MSG_ID:
@@ -442,7 +458,7 @@ bool AP_SerialConcentrator::Data_Message_Process(void)
             bms_state.time_s = AP_HAL::micros();
             test_counter++;
             //gcs().send_text(MAV_SEVERITY_INFO,"bmsupdateok=%ld,%d",bms_state.voltages,bms_state.cell_vot[0]);
-            
+            //bool safety_pressed = hal.util->safety_switch_state();
             break;
         case BMS_STATUE2_MSG_ID:
             bms_state.voltages = (swapInt16(data_msg.data.bms2.voltages)& 0x0000FFFF)*10;
@@ -463,6 +479,29 @@ bool AP_SerialConcentrator::Data_Message_Process(void)
             //gcs().send_text(MAV_SEVERITY_INFO,"bmsupdateok=%ld,%d,%d,%ld,%ld",bms_state.voltages,bms_state.cell_vot[0],bms_state.bat_temp,bms_state.capacity_remaining,bms_state.capacity_full);
             
             break;
+        case OPENMV_STATUE_ID_MSG_ID:
+        num=swapInt16(data_msg.data.openmv_u.id);
+        //gcs().send_text(MAV_SEVERITY_INFO,"MV_ID1=%d,X=%d,Y=%d,R=%d",data_msg.data.openmv_u.id,data_msg.data.openmv_u.x,data_msg.data.openmv_u.y,data_msg.data.openmv_u.r);
+        if(num<8)
+        {
+            num--;
+            openmv_data[num].active=1;
+            openmv_data[num].id=num;
+            openmv_data[num].x=swapInt16(data_msg.data.openmv_u.x);
+            openmv_data[num].y=swapInt16(data_msg.data.openmv_u.y);
+            openmv_data[num].r=swapInt16(data_msg.data.openmv_u.r);
+            openmv_data[num].ipx_x_d=swapInt32(data_msg.data.openmv_u.ipx_x_d);
+            openmv_data[num].ipx_y_d=swapInt32(data_msg.data.openmv_u.ipx_y_d);
+            openmv_data[num].last_update_time= AP_HAL::millis();
+            delay_n++;
+           if(delay_n >10)
+           {
+                delay_n = 0;
+            gcs().send_text(MAV_SEVERITY_INFO,"MV_ID=%d,X=%d,Y=%d,R=%d",openmv_data[num].id+1,openmv_data[num].x,openmv_data[num].y,openmv_data[num].r);
+            }
+            //gcs().send_text(MAV_SEVERITY_INFO,"MV_ID=%d,X=%d,Y=%d,R=%d,xd=%ld,yd=%ld",openmv_data[num].id+1,openmv_data[num].x,openmv_data[num].y,openmv_data[num].r,openmv_data[num].ipx_x_d,openmv_data[num].ipx_y_d);
+        }
+        break;
         case COMP_PASSTHROUGH_MSG_ID:
             
             len = data_msg.length-5;
@@ -485,7 +524,7 @@ bool AP_SerialConcentrator::Data_Message_Process(void)
             //delay_n++;
            // if(delay_n >2)
             {
-                delay_n = 0;
+                //delay_n = 0;
                 pcbtemp[0]=data_msg.data.bytes[0];
                 pcbtemp[1]=data_msg.data.bytes[1];
                 pcbtemp[2]=data_msg.data.bytes[2];

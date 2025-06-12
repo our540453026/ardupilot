@@ -236,7 +236,9 @@ public:
     uint16_t avoid_rtl_delay=0;
     uint16_t avoid_rtl_count=0;
     bool avoid_rtl_flag=false;
-
+    uint16_t rc_openmv_count=0;
+    bool have_move_flag=false;
+    bool have_openmv_flag=false;
 private:
 
     // key aircraft parameters passed to multiple libraries

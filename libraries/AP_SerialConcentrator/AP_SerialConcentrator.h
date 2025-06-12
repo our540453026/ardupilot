@@ -69,6 +69,7 @@
 #define CAMERA_ABNORMAL_MSG_ID   0x0204
 #define CAMERA_GIM_CMD_MSG_ID   0x0207
 #define CAMERA_GIM_ST_MSG_ID   0x020A
+#define OPENMV_STATUE_ID_MSG_ID   0x0401
 #define COMP_TYPE 0x00
 #define COMP_GET_VER_MSG_ID   0x0f01
 #define COMP_FIRMWARE_UPGRADE_MSG_ID   0x0f02
@@ -115,6 +116,28 @@ public:
             uint8_t gim_result; /*< 0x01--正常接收*/
                  
         };
+        struct PACKED openmv_t
+        {
+            bool active;  //0--没有数据  1--有数据
+            uint16_t type;
+            uint16_t id;
+            uint16_t x;
+            uint16_t y; /*<  0x01--正常接收*/
+            uint16_t r; /*< 0x01--正常接收*/ 
+            uint32_t ipx_x_d;
+            uint32_t ipx_y_d;
+            uint32_t last_update_time;  
+        };
+        struct PACKED openmv_parse_t
+        {
+            uint16_t type;
+            uint16_t id;
+            uint16_t x;
+            uint16_t y; /*<  0x01--正常接收*/
+            uint16_t r; /*< 0x01--正常接收*/ 
+            uint32_t ipx_x_d;
+            uint32_t ipx_y_d; 
+        }; 
     struct PACKED esc_st_t
         {
             uint16_t vot1; /*单位 V */ 
@@ -182,6 +205,7 @@ public:
             uint32_t capacity_remaining; /*< [mAh]  remaining capacity of the battery..*/	
             int8_t	bat_temp;
         };
+        
     uint32_t        _last_update_time;
     bool    Tx_urgent_statue = false;
     typedef struct
@@ -214,6 +238,8 @@ public:
     bms_staute_t bms_state;
     gimbal_t gimbal_state;
     gimbal_st_t gimbal_st_u;
+    openmv_t openmv_data[8];
+
     static AP_SerialConcentrator *get_singleton(void) { return _singleton; }
 private:
     uint16_t g_crc_val,test_counter;
@@ -238,6 +264,7 @@ private:
                 gimbal_ack_t gimbal_ack_u;
                 gimbal_st_t gimbal_st_u;
                 esc_st_t esc_st;
+                openmv_parse_t openmv_u;
                 uint8_t bytes[256];
             };
     struct PACKED data_msg_parser

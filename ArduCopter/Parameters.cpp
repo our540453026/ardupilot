@@ -1160,10 +1160,15 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
 
     // extend to a new group
     AP_SUBGROUPEXTENSION("", 61, ParametersG2, var_info2),
-
+    AP_SUBGROUPEXTENSION("", 62, ParametersG2, var_info3),
     // ID 62 is reserved for the SHOW_... parameters from the Skybrush fork at
     // https://github.com/skybrush-io/ardupilot
-
+    // AP_GROUPINFO("MV_LAT_E7", 62, ParametersG2, openmv_lat, 0),
+    // AP_GROUPINFO("MV_LNG_E7", 63, ParametersG2, openmv_lng, 0),
+    // AP_GROUPINFO("MV_ALT_M", 64, ParametersG2, openmv_alt, 0.0),
+    // AP_GROUPINFO("MV_TIME_S", 65, ParametersG2, openmv_max_time, 120),
+    // AP_GROUPINFO("MV_COUNT", 66, ParametersG2, openmv_max_count, 3),
+    // AP_GROUPINFO("MV_SAFE", 67, ParametersG2, openmv_safe, 0),
     AP_GROUPEND
 };
 
@@ -1215,7 +1220,19 @@ const AP_Param::GroupInfo ParametersG2::var_info2[] = {
 
     AP_GROUPEND
 };
+const AP_Param::GroupInfo ParametersG2::var_info3[] = {
 
+    AP_GROUPINFO("MV_LAT_E7", 1, ParametersG2, openmv_lat, 0),
+    AP_GROUPINFO("MV_LNG_E7", 2, ParametersG2, openmv_lng, 0),
+    AP_GROUPINFO("MV_ALT_M", 3, ParametersG2, openmv_alt, 0.0),
+    AP_GROUPINFO("MV_TIME_S", 4, ParametersG2, openmv_max_time, 120),
+    AP_GROUPINFO("MV_COUNT", 5, ParametersG2, openmv_max_count, 3),
+    AP_GROUPINFO("MV_SAFE", 6, ParametersG2, openmv_safe, 0),
+
+    // ID 62 is reserved for the AP_SUBGROUPEXTENSION
+
+    AP_GROUPEND
+};
 /*
   constructor for g2 object
  */

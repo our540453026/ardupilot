@@ -519,7 +519,7 @@ AP_GPS_NOVA::process_message(void)
 
             state.gps_yaw = wrap_360(heading3au.heading + 180);
             state.have_gps_yaw = true;
-            if(heading3au.hdg_std >4) state.gps_yaw_accuracy =  2;// heading3au.hdg_std;
+            if(heading3au.hdg_std >1) state.gps_yaw_accuracy =  1;// heading3au.hdg_std;
             else state.gps_yaw_accuracy = heading3au.hdg_std;
             state.have_gps_yaw_accuracy = true;
             state.gps_yaw_time_ms = AP_HAL::millis();

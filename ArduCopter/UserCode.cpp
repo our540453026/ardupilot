@@ -85,22 +85,108 @@ void Copter::userhook_50Hz()
 void Copter::userhook_MediumLoop()
 {
     // put your 10Hz code here
+    Vector3f veh;
     serial_concentrator.update();
-    openmv.update();
-    if(get_mode() == 6 || get_mode() == 3)
+    if(get_mode() == 6 && !have_openmv_flag )
     {
-        if( openmv.openmv_data[0].active==1 || copter.openmv.openmv_data[1].active==1||copter.openmv.openmv_data[2].active==1||copter.openmv.openmv_data[3].active==1||copter.openmv.openmv_data[6].active==1)
+        if(g2.openmv_max_time)
         {
-            set_mode(Mode::Number::OPENMV, ModeReason::AVOIDANCE);
+            if( copter.serial_concentrator.openmv_data[0].active==1 || copter.serial_concentrator.openmv_data[1].active==1||copter.serial_concentrator.openmv_data[2].active==1||copter.serial_concentrator.openmv_data[3].active==1||copter.serial_concentrator.openmv_data[6].active==1)
+            {
+                // if(copter.serial_concentrator.openmv_data[6].active!=1)
+                // {
+                     rc_openmv_count++;
+                // }
+                // else
+                // {
+                //     if(copter.serial_concentrator.openmv_data[6].x<285 || copter.serial_concentrator.openmv_data[6].x>375 || copter.serial_concentrator.openmv_data[6].y<185|| copter.serial_concentrator.openmv_data[6].y>275)
+                //     set_mode(Mode::Number::OPENMV, ModeReason::AVOIDANCE);
+                //     rc_openmv_count=0;
+                    
+                // }
+                if(rc_openmv_count>3)
+                {
+                    set_mode(Mode::Number::OPENMV, ModeReason::AVOIDANCE);
+                    have_openmv_flag = true;
+                    rc_openmv_count=0;
+                }
+                copter.serial_concentrator.openmv_data[0].active=0;
+                copter.serial_concentrator.openmv_data[1].active=0;
+                copter.serial_concentrator.openmv_data[2].active=0;
+                copter.serial_concentrator.openmv_data[3].active=0;
+                copter.serial_concentrator.openmv_data[6].active=0;
+            }
+            else
+            {
+               if(copter.ahrs_view->get_relative_position_NED_home(veh))
+                {
+                    if(abs(veh.z)>2 && abs(veh.z)<8)
+                    {
+                        set_mode(Mode::Number::OPENMV, ModeReason::AVOIDANCE);
+                        have_openmv_flag = true;
+                    }
+                } 
+            }
+        }
+        have_move_flag=true;
+    }
+    if(get_mode() == 5)
+    {
+        have_move_flag=false;
+    }
+    else if(ahrs_view->groundspeed() > 1)
+    {
+        have_move_flag=true;
+    }
+    if(get_mode() == 3 && have_move_flag)
+    {
+        if(g2.openmv_max_time)
+        {
+            if( copter.serial_concentrator.openmv_data[0].active==1 || copter.serial_concentrator.openmv_data[1].active==1||copter.serial_concentrator.openmv_data[2].active==1||copter.serial_concentrator.openmv_data[3].active==1||copter.serial_concentrator.openmv_data[6].active==1)
+            {
+                // if(copter.serial_concentrator.openmv_data[6].active!=1)
+                // {
+                     rc_openmv_count++;
+                // }
+                // else
+                // {
+                //     if(copter.serial_concentrator.openmv_data[6].x<285 || copter.serial_concentrator.openmv_data[6].x>375 || copter.serial_concentrator.openmv_data[6].y<185|| copter.serial_concentrator.openmv_data[6].y>275)
+                //     set_mode(Mode::Number::OPENMV, ModeReason::AVOIDANCE);
+                //     rc_openmv_count=0;
+                    
+                // }
+                if(rc_openmv_count>3)
+                {
+                    set_mode(Mode::Number::OPENMV, ModeReason::AVOIDANCE);
+                    rc_openmv_count=0;
+                    have_openmv_flag = true;
+                }
+                copter.serial_concentrator.openmv_data[0].active=0;
+                copter.serial_concentrator.openmv_data[1].active=0;
+                copter.serial_concentrator.openmv_data[2].active=0;
+                copter.serial_concentrator.openmv_data[3].active=0;
+                copter.serial_concentrator.openmv_data[6].active=0;
+            }
+            else
+            {
+               if(copter.ahrs_view->get_relative_position_NED_home(veh))
+                {
+                    if(abs(veh.z)>2 && abs(veh.z)<8)
+                    {
+                        set_mode(Mode::Number::OPENMV, ModeReason::AVOIDANCE);
+                        have_openmv_flag = true;
+                    }
+                } 
+            }
         }
     }
-    if(get_mode() == 3 && g.rtk_behavior)
-    {
-        if( ahrs_view->groundspeed() > 0.5 && gps.status()!=AP_GPS::GPS_OK_FIX_3D_RTK_FIXED)
-        {
-            set_mode(Mode::Number::LOITER, ModeReason::AVOIDANCE);
-        } 
-    }
+    // if(get_mode() == 3 && g.rtk_behavior)
+    // {
+    //     if( ahrs_view->groundspeed() > 0.5 && gps.status()!=AP_GPS::GPS_OK_FIX_3D_RTK_FIXED)
+    //     {
+    //         set_mode(Mode::Number::LOITER, ModeReason::AVOIDANCE);
+    //     } 
+    // }
 }
 #endif
 
