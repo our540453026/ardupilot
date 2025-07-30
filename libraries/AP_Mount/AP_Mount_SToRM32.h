@@ -25,7 +25,7 @@ public:
 
     // has_pan_control - returns true if this mount can control its pan (required for multicopters)
     bool has_pan_control() const override { return yaw_range_valid(); }
-
+    void send_gimbal_cmd_msg(uint8_t * buf,u_int8_t len) override;
 protected:
 
     // get attitude as a quaternion.  returns true on success

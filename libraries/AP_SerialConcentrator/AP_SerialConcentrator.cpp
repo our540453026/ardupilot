@@ -243,7 +243,75 @@ void AP_SerialConcentrator::send_gimbal_data(gimbal_t gimbal)
 
     //gcs().send_text(MAV_SEVERITY_INFO,"gimbalok=%d",gimbal.pitch);
 }
+void AP_SerialConcentrator::send_camare_ctl(uint8_t cmd, uint32_t id,uint32_t param)
+{
+    uint8_t buf[100];
+	uint8_t n;
+    uint16_t gim_crc;
+	n = 0;
+    buf[n++] =0xAB;
+    buf[n++] =0xCB;
+    buf[n++] =0x00;
+    buf[n++] =0x18;
+	buf[n++] = UAV_TYPE;
+    buf[n++] = (uint8_t)(COMP_PASSTHROUGH_MSG_ID>>8);
+	buf[n++] = (uint8_t) COMP_PASSTHROUGH_MSG_ID;
+    buf[n++] =0xAB;
+    buf[n++] =0xCB;
+    buf[n++] =0x00;
+    buf[n++] =0x0F;
+	buf[n++] = CAMERA_TYPE;
+	buf[n++] = (uint8_t)(CAMERA_GIM_CMD2_MSG_ID>>8);
+	buf[n++] = (uint8_t) CAMERA_GIM_CMD2_MSG_ID;
+	buf[n++] = (uint8_t)(id>>24);
+	buf[n++] = (uint8_t)(id>>16);
+	buf[n++] = (uint8_t)(id>>8);
+	buf[n++] = (uint8_t)(id);
+    buf[n++] = 0x04;
+    buf[n++] = cmd;
+	buf[n++] = (uint8_t)(param>>24);
+	buf[n++] = (uint8_t)(param>>16);
+	buf[n++] = (uint8_t)(param>>8);
+	buf[n++] = (uint8_t)(param);
+    gcs().send_text(MAV_SEVERITY_INFO,"camare_ctl:%d,%d,%ld", cmd,buf[n-1],param);
+    gim_crc = crcSum(&buf[9],15);
+    buf[n++] = (uint8_t)(gim_crc>>8);
+	buf[n++] = (uint8_t)(gim_crc);
+    gim_crc = crcSum(&buf[2],n-2);
+    buf[n++] = (uint8_t)(gim_crc>>8);
+	buf[n++] = (uint8_t)(gim_crc);
+    if(_port !=NULL)
+    {
+        _port->write(buf, 28);
+        _port->write(buf, 28);
+        _port->write(buf, 28);
+        
+    }
+}
+void AP_SerialConcentrator::send_camare_record_on(void)
+{
+    uint8_t buf[]={0xAB ,0xCB ,0x00 ,0x18 ,0x01 ,0x0F ,0x07 ,0xAB ,0xCB ,0x00 ,0x0F ,0x00 ,0x02 ,0x08 ,0x00 ,0x00 ,0x00 ,0x01 ,0x01 ,0x08 ,0x00 ,0x00 ,0x00 ,0x02 ,0x00 ,0x25,0x01 ,0xEF};
 
+    if(_port !=NULL)
+    {
+        _port->write(buf, 28);
+        _port->write(buf, 28);
+        _port->write(buf, 28);
+        gcs().send_text(MAV_SEVERITY_INFO,"record_on");
+    }
+}
+void AP_SerialConcentrator::send_camare_record_off(void)
+{
+    uint8_t buf[]={0xAB ,0xCB ,0x00 ,0x18 ,0x01 ,0x0F ,0x07 ,0xAB ,0xCB ,0x00 ,0x0F ,0x00 ,0x02 ,0x08 ,0x00 ,0x00 ,0x00 ,0x01 ,0x01 ,0x09 ,0x00 ,0x00 ,0x00 ,0x02 ,0x00 ,0x26,0x01 ,0xF1};
+
+    if(_port !=NULL)
+    {
+        _port->write(buf, 28);
+        _port->write(buf, 28);
+        _port->write(buf, 28);
+        gcs().send_text(MAV_SEVERITY_INFO,"record_off");
+    }
+}
 void AP_SerialConcentrator::send_gimbal_st_data(gimbal_st_t gimbal)
 {
     

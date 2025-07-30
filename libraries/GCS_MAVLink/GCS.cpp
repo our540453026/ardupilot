@@ -109,7 +109,16 @@ void GCS::send_named_float(const char *name, float value) const
     gcs().send_to_active_channels(MAVLINK_MSG_ID_NAMED_VALUE_FLOAT,
                                   (const char *)&packet);
 }
+void GCS::send_msg_v2_extension(uint8_t *buf, uint8_t len,uint8_t target) const 
+{
 
+    mavlink_v2_extension_t packet {};
+    packet.payload[0]=len;
+    memcpy(&packet.payload[1], buf, len);
+    packet.target_component = target;
+    gcs().send_to_active_channels(MAVLINK_MSG_ID_V2_EXTENSION,
+                                  (const char *)&packet);
+}
 #if HAL_HIGH_LATENCY2_ENABLED
 void GCS::enable_high_latency_connections(bool enabled)
 {

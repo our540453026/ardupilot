@@ -1419,12 +1419,14 @@ void GCS_MAVLINK_Copter::handleMessage(const mavlink_message_t &msg)
 #endif
     case MAVLINK_MSG_ID_V2_EXTENSION :
         {
+            AP_Mount *mount = AP::mount();
+            
             mavlink_v2_extension_t packet;
             mavlink_msg_v2_extension_decode(&msg,&packet);
             //if(packet.message_type == 32768)
             {
                 //copter.serial_concentrator.send_data(packet.payload,msg.len);
-                copter.serial_concentrator.send_data(&packet.payload[1],packet.payload[0]);
+                //copter.serial_concentrator.send_data(&packet.payload[1],packet.payload[0]);
                 // gcs().send_text(MAV_SEVERITY_INFO,"se");
                 // //int i;
                 // for(int i = 1;i <packet.payload[0];i=i+5)
@@ -1432,7 +1434,23 @@ void GCS_MAVLINK_Copter::handleMessage(const mavlink_message_t &msg)
                 //     gcs().send_text(MAV_SEVERITY_INFO,"%x,%x,%x,%x,%x",packet.payload[i],packet.payload[i+1],packet.payload[i+2],packet.payload[i+3],packet.payload[i+4]);
                 // }
             }
-            //gcs().send_text(MAV_SEVERITY_INFO,"v2=%ld",AP_HAL::micros());
+            if(packet.target_component==1)
+            {
+                copter.serial_concentrator.send_data(&packet.payload[1],packet.payload[0]);
+            }
+            if (mount != nullptr && packet.target_component==1) {
+                mount->send_gimbal_cmd_msg(&packet.payload[1],packet.payload[0]); //gcs发到云台
+                
+                //gcs().send_text(MAV_SEVERITY_INFO,"v2 com:%x,%x,%x,%x,%x,%x,%x",packet.payload[8],packet.payload[9],packet.payload[10],packet.payload[11],packet.payload[12],packet.payload[13],packet.payload[14]);
+            }
+            else
+            {
+                //send_v2_extension(&packet.payload[1], packet.payload[0]); //gcs发到云台
+                gcs().send_msg_v2_extension(&packet.payload[1],packet.payload[0],154); //云台发到gcs
+                //gcs().send_text(MAV_SEVERITY_INFO,"v2 com=%d,sys=%d",packet.target_component,packet.target_system);
+            }
+            // gcs().send_text(MAV_SEVERITY_INFO,"v2 com=%d,sys=%d",packet.target_component,packet.target_system);
+            // gcs().send_text(MAV_SEVERITY_INFO,"v2 com1:%x,%x,%x,%x,%x,%x,%x",packet.payload[1],packet.payload[2],packet.payload[3],packet.payload[4],packet.payload[5],packet.payload[6],packet.payload[7]);
         }
         break; 
     case MAVLINK_MSG_ID_ATTITUDE:

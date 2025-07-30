@@ -9,7 +9,7 @@
 #include <AP_Gripper/AP_Gripper_config.h>
 #include <AP_Vehicle/AP_Vehicle_Type.h>
 #include <AP_BoardConfig/AP_BoardConfig.h>
-
+#include <../ArduCopter/Copter.h>
 const AP_Param::GroupInfo AP_Mission::var_info[] = {
 
     // @Param: TOTAL
@@ -412,13 +412,41 @@ bool AP_Mission::start_command(const Mission_Command& cmd)
 #if AP_CAMERA_ENABLED
     case MAV_CMD_DO_DIGICAM_CONFIGURE:
     case MAV_CMD_DO_DIGICAM_CONTROL:
+    // {
+    //     if(cmd.content.digicam_control.shooting_cmd==2)
+    //     {
+    //         copter.serial_concentrator.send_camare_record_on();
+    //     }
+    //     else
+    //     {
+    //         if(cmd.content.digicam_control.shooting_cmd==3)
+    //         {
+    //             copter.serial_concentrator.send_camare_record_off();
+    //         }
+    //     }
+    // }
     case MAV_CMD_DO_SET_CAM_TRIGG_DIST:
     case MAV_CMD_IMAGE_START_CAPTURE:
     case MAV_CMD_SET_CAMERA_ZOOM:
     case MAV_CMD_SET_CAMERA_FOCUS:
     case MAV_CMD_VIDEO_START_CAPTURE:
     case MAV_CMD_VIDEO_STOP_CAPTURE:
-        return start_command_camera(cmd);
+        {
+            if(cmd.id == MAV_CMD_SET_CAMERA_ZOOM)
+            {
+                copter.serial_concentrator.send_camare_ctl(CAMERA_CTR_ZOOM,0,cmd.content.set_camera_zoom.zoom_value);
+            }
+            else if(cmd.id == MAV_CMD_VIDEO_START_CAPTURE)
+            {
+                copter.serial_concentrator.send_camare_ctl(CAMERA_CTR_START_RECODER,0,0);
+            }
+            else if(cmd.id == MAV_CMD_VIDEO_STOP_CAPTURE)
+            {
+                copter.serial_concentrator.send_camare_ctl(CAMERA_CTR_STOP_RECODER,0,0);
+            }
+            return start_command_camera(cmd);
+        }
+        
 #endif
     case MAV_CMD_DO_PARACHUTE:
         return start_command_parachute(cmd);

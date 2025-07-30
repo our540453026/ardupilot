@@ -476,30 +476,44 @@ void GCS_MAVLINK::send_rangefinder() const
             s->distance(),
             s->voltage_mv() * 0.001f);
 }
+void GCS_MAVLINK::send_v2_extension(u_int8_t *buf,u_int8_t len)
+{
+    mavlink_v2_extension_t v2_extension;
+    v2_extension.target_component = 154;
+    v2_extension.payload[0] = len; // send data length 有效数据长度
+    memcpy(v2_extension.payload+1,buf,len);
+    mavlink_msg_v2_extension_send_struct(chan,&v2_extension);
+    gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_154=%d",chan);
+}
 void GCS_MAVLINK::send_v2_extension()
 {
     //gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_extension=0");
+    uint8_t buf[256];
     uint8_t dat;
     uint32_t tnow;
     AP_SerialConcentrator *serialConcentrator = AP_SerialConcentrator::get_singleton();
     if (serialConcentrator == nullptr) {
         return;
     }
-
+    mavlink_v2_extension.message_type =0x00;
+    mavlink_v2_extension.target_component= 155;
     while(serialConcentrator->usart_serial_available(&dat))
     {
-        mavlink_v2_extension.payload[send_v2_extension_index++] = dat;
-        mavlink_v2_extension.message_type =0x00;
+        //mavlink_v2_extension.payload[send_v2_extension_index++] = dat;
+        buf[send_v2_extension_index++] = dat;
         if(send_v2_extension_index >= LINK_LENGTH) //
         {
-            mavlink_v2_extension.payload[0] = LINK_LENGTH - 1;//send data length 有效数据长度
-            mavlink_msg_v2_extension_send_struct(chan,&mavlink_v2_extension);
+            //gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_155=%d",chan);
+            //mavlink_v2_extension.payload[0] = LINK_LENGTH - 1;//send data length 有效数据长度
+            buf[0] = LINK_LENGTH - 1;
+             gcs().send_msg_v2_extension(&buf[1],buf[0],155);
+            //mavlink_msg_v2_extension_send_struct(chan,&mavlink_v2_extension);
             // gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_ex=%d,%d,%d,id:%02x,%02x",mavlink_v2_extension.target_system,mavlink_v2_extension.target_network,mavlink_v2_extension.target_component,mavlink_v2_extension.payload[8],mavlink_v2_extension.payload[9]);
             // gcs().send_text(MAV_SEVERITY_INFO,"len:%d,%02x %02x ",mavlink_v2_extension.payload[0],mavlink_v2_extension.payload[1],mavlink_v2_extension.payload[2]);
        
             //gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_ex=%d,%d,%d",mavlink_v2_extension.target_system,mavlink_v2_extension.target_network,mavlink_v2_extension.target_component);
             send_v2_extension_index = 1; 
-            memset(mavlink_v2_extension.payload,0,LINK_LENGTH);
+            memset(buf,0,256);
             return;          
             //gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_extension=%d",send_v2_extension_index);
         }
@@ -526,8 +540,11 @@ void GCS_MAVLINK::send_v2_extension()
     tnow = AP_HAL::micros();
     if(send_v2_extension_index > 1 && tnow - serialConcentrator->_last_update_time >500)
     {
-        mavlink_v2_extension.payload[0] = send_v2_extension_index - 1;//send data length
-        mavlink_msg_v2_extension_send_struct(chan,&mavlink_v2_extension);
+        //gcs().send_text(MAV_SEVERITY_CRITICAL,"v3_155=%d",chan);
+        // mavlink_v2_extension.payload[0] = send_v2_extension_index - 1;//send data length
+        // mavlink_msg_v2_extension_send_struct(chan,&mavlink_v2_extension);
+         buf[0] = LINK_LENGTH - 1;
+             gcs().send_msg_v2_extension(&buf[1],buf[0],155);
         //gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_ex=%d,%ld",send_v2_extension_index,AP_HAL::micros());
         /*for(i=1;i<send_v2_extension_index;i++)
                 {
@@ -542,7 +559,7 @@ void GCS_MAVLINK::send_v2_extension()
         //gcs().send_text(MAV_SEVERITY_CRITICAL,"v2_ex=%d,%d,%d,id:%02x,%02x",mavlink_v2_extension.target_system,mavlink_v2_extension.target_network,mavlink_v2_extension.target_component,mavlink_v2_extension.payload[8],mavlink_v2_extension.payload[9]);
             
         send_v2_extension_index = 1;
-        memset(mavlink_v2_extension.payload,0,LINK_LENGTH); 
+        memset(buf,0,256); 
         serialConcentrator->Tx_urgent_statue = false;
         return;
         

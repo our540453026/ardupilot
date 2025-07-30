@@ -335,6 +335,7 @@ public:
     bool send_battery_status();
     void send_distance_sensor();
     void send_v2_extension() ;
+    void send_v2_extension(u_int8_t *buf,u_int8_t len);
     // send_rangefinder sends only if a downward-facing instance is
     // found.  Rover overrides this!
     virtual void send_rangefinder() const;
@@ -367,6 +368,7 @@ public:
     void send_vibration() const;
     void send_gimbal_device_attitude_status() const;
     void send_named_float(const char *name, float value) const;
+    void send_msg_v2_extension(const char *buf, uint8_t len,uint8_t target) const;
     void send_home_position() const;
     void send_gps_global_origin() const;
     virtual void send_attitude_target() {};
@@ -1144,7 +1146,7 @@ public:
     void send_message(enum ap_message id);
     void send_mission_item_reached_message(uint16_t mission_index);
     void send_named_float(const char *name, float value) const;
-
+    void send_msg_v2_extension(uint8_t *buf, uint8_t len,uint8_t target) const;
     void send_parameter_value(const char *param_name,
                               ap_var_type param_type,
                               float param_value);

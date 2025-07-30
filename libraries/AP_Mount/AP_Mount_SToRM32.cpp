@@ -126,7 +126,18 @@ void AP_Mount_SToRM32::find_gimbal()
         _initialised = true;
     }
 }
-
+void AP_Mount_SToRM32::send_gimbal_cmd_msg(uint8_t * buf,u_int8_t len)
+{
+    mavlink_v2_extension_t mavlink_v2_extension;
+    // exit immediately if not initialised
+    if (!_initialised) {
+        return;
+    }
+    mavlink_v2_extension.payload[0] = len;//send data length 有效数据长度
+    memcpy(mavlink_v2_extension.payload+1,buf,len);
+    mavlink_msg_v2_extension_send_struct(_chan,&mavlink_v2_extension);
+     return;
+}
 // send_do_mount_control - send a COMMAND_LONG containing a do_mount_control message
 void AP_Mount_SToRM32::send_do_mount_control(const MountTarget& angle_target_rad)
 {

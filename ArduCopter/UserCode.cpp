@@ -33,25 +33,27 @@ void Copter::userhook_50Hz()
                     continue;
                 }
 
-                if(get_mode() == 3 && ahrs_view->groundspeed() > 0.5 && dist_array.distance[i]>0.2 && dist_array.distance[i] < g.avoid_distan_m)
+                if(get_mode() == 3 || get_mode() == 29 )
                 {               
                     //test_dis_home = tof_val;//home_distance()/100.0;
                     //test_dis_tof = dist_array.distance[i] * 100.0f;
                     //proximity_bitmask_val = i;
                    // set_mode_SmartRTL_or_RTL(ModeReason::AUTO_RTL_EXIT);
-                   if(g.avoid_behavior==1)
+                   if(ahrs_view->groundspeed() > 0.5 && dist_array.distance[i]>0.2 && dist_array.distance[i] < g.avoid_distan_m)
                    {
-                        set_mode(Mode::Number::RTL, ModeReason::AVOIDANCE);
-                   }
-                   else if(g.avoid_behavior==2)
-                   {
-                        set_mode(Mode::Number::SMART_RTL, ModeReason::AVOIDANCE);
-                   }
-                   else
-                   {
-                        set_mode(Mode::Number::LOITER, ModeReason::AVOIDANCE);
-                   }
-                    
+                        if(g.avoid_behavior==1)
+                        {
+                                set_mode(Mode::Number::RTL, ModeReason::AVOIDANCE);
+                        }
+                        else if(g.avoid_behavior==2)
+                        {
+                                set_mode(Mode::Number::SMART_RTL, ModeReason::AVOIDANCE);
+                        }
+                        else
+                        {
+                                set_mode(Mode::Number::LOITER, ModeReason::AVOIDANCE);
+                        }
+                    }
                     
                 }
                 // if(get_mode() == 3 && ahrs_view->groundspeed() > 0.5 && dist_array.distance[i]>0.2 && dist_array.distance[i] < g.avoid_distan_m)
@@ -87,6 +89,25 @@ void Copter::userhook_MediumLoop()
     // put your 10Hz code here
     Vector3f veh;
     serial_concentrator.update();
+    if(get_mode() == 6)
+    {
+        if( copter.serial_concentrator.openmv_data[0].active==1 || copter.serial_concentrator.openmv_data[1].active==1||copter.serial_concentrator.openmv_data[2].active==1||copter.serial_concentrator.openmv_data[3].active==1||copter.serial_concentrator.openmv_data[6].active==1)
+            {
+                rc_openmv_count++;
+                
+                if(rc_openmv_count>3)
+                {
+                    set_mode(Mode::Number::OPENMV, ModeReason::AVOIDANCE);
+                    have_openmv_flag = true;
+                    rc_openmv_count=0;
+                }
+                copter.serial_concentrator.openmv_data[0].active=0;
+                copter.serial_concentrator.openmv_data[1].active=0;
+                copter.serial_concentrator.openmv_data[2].active=0;
+                copter.serial_concentrator.openmv_data[3].active=0;
+                copter.serial_concentrator.openmv_data[6].active=0;
+            }
+    }
     if(get_mode() == 6 && !have_openmv_flag )
     {
         if(g2.openmv_max_time)
@@ -128,11 +149,27 @@ void Copter::userhook_MediumLoop()
                 } 
             }
         }
+        //if(abs(copter.serial_concentrator.gimbal_st_u.pitch)> 85 && abs(copter.serial_concentrator.gimbal_st_u.pitch) <95)
+        {
+            AP_Mount *mount = AP::mount();
+            if (mount != nullptr) {
+                mavlink_command_long_t packet;
+                packet.command = MAV_CMD_DO_MOUNT_CONTROL;
+                packet.param1 = -90;
+                packet.param2 = 0;
+                packet.param3 = 0;
+                packet.param7 = 2;
+                mount->handle_command_long(packet);
+            }
+            gcs().send_text(MAV_SEVERITY_INFO,"rtl ctl pitch");
+            
+        }
         have_move_flag=true;
     }
     if(get_mode() == 5)
     {
         have_move_flag=false;
+        have_openmv_flag=false;
     }
     else if(ahrs_view->groundspeed() > 1)
     {

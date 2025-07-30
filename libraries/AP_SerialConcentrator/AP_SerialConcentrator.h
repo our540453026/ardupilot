@@ -68,7 +68,18 @@
 #define CAMERA_STATUE_MSG_ID   0x0203
 #define CAMERA_ABNORMAL_MSG_ID   0x0204
 #define CAMERA_GIM_CMD_MSG_ID   0x0207
+#define CAMERA_GIM_CMD2_MSG_ID   0x0208
 #define CAMERA_GIM_ST_MSG_ID   0x020A
+#define CAMERA_CTR_OFF	0x01
+#define CAMERA_CTR_ON	0x02
+#define CAMERA_CTR_REPAIR	0x03
+#define CAMERA_CTR_SPEED_ADD	0x04
+#define CAMERA_CTR_SPEED_LESS	0x05
+#define CAMERA_CTR_SHUTTER	0x06
+#define CAMERA_CTR_RESET_SPEED	0x07
+#define CAMERA_CTR_START_RECODER	0x08
+#define CAMERA_CTR_STOP_RECODER	0x09
+#define CAMERA_CTR_ZOOM	0x1C
 #define OPENMV_STATUE_ID_MSG_ID   0x0401
 #define COMP_TYPE 0x00
 #define COMP_GET_VER_MSG_ID   0x0f01
@@ -235,6 +246,9 @@ public:
     void send_gimbal_data(gimbal_t gimbal);
     void send_gimbal_st_data(gimbal_st_t gimbal);
     bool update(void);
+    void send_camare_record_on(void);
+    void send_camare_record_off(void);
+    void send_camare_ctl(uint8_t cmd, uint32_t id,uint32_t param);
     bms_staute_t bms_state;
     gimbal_t gimbal_state;
     gimbal_st_t gimbal_st_u;

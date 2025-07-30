@@ -150,7 +150,7 @@ public:
 
     // send a GIMBAL_DEVICE_ATTITUDE_STATUS message to GCS
     void send_gimbal_device_attitude_status(mavlink_channel_t chan);
-
+    void send_gimbal_cmd_msg(uint8_t *buf, uint8_t len);
     // get mount's current attitude in euler angles in degrees.  yaw angle is in body-frame
     // returns true on success
     bool get_attitude_euler(uint8_t instance, float& roll_deg, float& pitch_deg, float& yaw_bf_deg);

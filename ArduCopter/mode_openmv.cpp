@@ -455,6 +455,15 @@ void ModeOpenmv::run()
                                 target_roll_mv=0;
                                 target_pitch_mv=0;
                                 target_climb_rate_mv=0;
+                                mv_alt_check_time++;
+                                if(mv_alt_check_time >20)
+                                {
+                                    max_x=100;
+                                    max_y=100;
+                                    max_speed=100;
+                                    ctr_timer=1;
+                                    mv_alt_check_time=0;
+                                }
                             //     if(mv_alt_check_time >=10)
                             //     {
                             //         max_x=100;
@@ -468,7 +477,7 @@ void ModeOpenmv::run()
                         }
                         else 
                         {
-                            mv_alt_check_time=0;
+                            //mv_alt_check_time=0;
                         
                             if((pos_d_h)>=-2)
                             {
@@ -476,6 +485,7 @@ void ModeOpenmv::run()
                                 max_x=35;
                                 max_y=20;
                                 max_speed=20;
+                                mv_alt_check_time=0;
                             }
                             else
                             {
@@ -489,13 +499,13 @@ void ModeOpenmv::run()
                     //     veh.z=0;
                     // }
                 }
-                else
-                {
-                    mv_alt_check_time=0;
-                    //mv_check_v_time=0;
-                    //mv_pix_x_check_time=0;
+                // else
+                // {
+                //     mv_alt_check_time=0;
+                //     //mv_check_v_time=0;
+                //     //mv_pix_x_check_time=0;
                     
-                }
+                // }
                 // gcs().send_text(MAV_SEVERITY_INFO,"ID7:ti_al=%d,ti_v=%d",mv_alt_check_time,mv_check_v_time);
                 // gcs().send_text(MAV_SEVERITY_INFO,"ID7:x=%d,y=%d,P_d=%.2f,V=%.2f",target_body_frame_x,target_body_frame_y,pos_d_h,vef.z);
                 // gcs().send_text(MAV_SEVERITY_INFO,"ID7:t_r=%.1f,t_p=%.1f,t_y=%.1f,t_z=%.1f",target_roll_mv,target_pitch_mv,target_yaw_rate,target_climb_rate_mv);
@@ -767,8 +777,8 @@ void ModeOpenmv::run()
         
             */
             mv_time++;
-            if(mv_time==1000) gcs().send_text(MAV_SEVERITY_INFO,"clear mv target=%f",target_climb_rate);
-            if(mv_time >=1000)
+            if(mv_time==5000) gcs().send_text(MAV_SEVERITY_INFO,"clear mv target=%f",target_climb_rate);
+            if(mv_time >=5000)
             {
                 //mv_mid_flag=false;
                 //copter.serial_concentrator.openmv_data[6].active=1;
@@ -783,29 +793,30 @@ void ModeOpenmv::run()
                  target_climb_rate_mv=0;
                 if(copter.ahrs_view->get_relative_position_NED_home(veh))
                 {
-                    if(abs(veh.z)<5)
+                    if(abs(veh.z)<4)
                     {
-                        // mv_alt_check_time++;
-                        // if(mv_alt_check_time >1000)
-                        // {
-                        //     target_roll_mv=0;
-                        //     target_pitch_mv=0;
-                        //     target_climb_rate_mv=0;
-                        //     // if(mv_alt_check_time >1500)
-                        //     // {
-                        //     //     max_x=100;
-                        //     //     max_y=100;
-                        //     //     max_speed=100;
-                        //     //     ctr_timer=1;
-                        //     //    // set_mode(Mode::Number::LAND, ModeReason::AVOIDANCE);
-                        //     //     gcs().send_text(MAV_SEVERITY_INFO,"*************target land*********");
-                        //     // }
-                        // }
+                        mv_alt_check_time++;
+                        if(mv_alt_check_time >1000)
+                        {
+                            target_roll_mv=0;
+                            target_pitch_mv=0;
+                            target_climb_rate_mv=0;
+                            if(mv_alt_check_time >1500)
+                            {
+                                max_x=100;
+                                max_y=100;
+                                max_speed=100;
+                                ctr_timer=1;
+                                mv_alt_check_time=0;
+                               // set_mode(Mode::Number::LAND, ModeReason::AVOIDANCE);
+                                gcs().send_text(MAV_SEVERITY_INFO,"*************target land*********");
+                            }
+                        }
                         target_climb_rate_mv=0;
                     }
                     else
                     {
-                        //mv_alt_check_time=0;
+                        mv_alt_check_time=0;
                         target_climb_rate_mv = -30;
                     }
                 }
