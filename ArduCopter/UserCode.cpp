@@ -89,27 +89,28 @@ void Copter::userhook_MediumLoop()
     // put your 10Hz code here
     Vector3f veh;
     serial_concentrator.update();
-    if(get_mode() == 6)
-    {
-        if( copter.serial_concentrator.openmv_data[0].active==1 || copter.serial_concentrator.openmv_data[1].active==1||copter.serial_concentrator.openmv_data[2].active==1||copter.serial_concentrator.openmv_data[3].active==1||copter.serial_concentrator.openmv_data[6].active==1)
-            {
-                rc_openmv_count++;
+    // if(get_mode() == 6)
+    // {
+    //     if( copter.serial_concentrator.openmv_data[0].active==1 || copter.serial_concentrator.openmv_data[1].active==1||copter.serial_concentrator.openmv_data[2].active==1||copter.serial_concentrator.openmv_data[3].active==1||copter.serial_concentrator.openmv_data[6].active==1)
+    //         {
+    //             rc_openmv_count++;
                 
-                if(rc_openmv_count>3)
-                {
-                    set_mode(Mode::Number::OPENMV, ModeReason::AVOIDANCE);
-                    have_openmv_flag = true;
-                    rc_openmv_count=0;
-                }
-                copter.serial_concentrator.openmv_data[0].active=0;
-                copter.serial_concentrator.openmv_data[1].active=0;
-                copter.serial_concentrator.openmv_data[2].active=0;
-                copter.serial_concentrator.openmv_data[3].active=0;
-                copter.serial_concentrator.openmv_data[6].active=0;
-            }
-    }
-    if(get_mode() == 6 && !have_openmv_flag )
+    //             if(rc_openmv_count>3)
+    //             {
+    //                 set_mode(Mode::Number::OPENMV, ModeReason::AVOIDANCE);
+    //                 have_openmv_flag = true;
+    //                 rc_openmv_count=0;
+    //             }
+    //             copter.serial_concentrator.openmv_data[0].active=0;
+    //             copter.serial_concentrator.openmv_data[1].active=0;
+    //             copter.serial_concentrator.openmv_data[2].active=0;
+    //             copter.serial_concentrator.openmv_data[3].active=0;
+    //             copter.serial_concentrator.openmv_data[6].active=0;
+    //         }
+    // }
+    if(get_mode() == 6  )
     {
+        
         if(g2.openmv_max_time)
         {
             if( copter.serial_concentrator.openmv_data[0].active==1 || copter.serial_concentrator.openmv_data[1].active==1||copter.serial_concentrator.openmv_data[2].active==1||copter.serial_concentrator.openmv_data[3].active==1||copter.serial_concentrator.openmv_data[6].active==1)
@@ -125,10 +126,21 @@ void Copter::userhook_MediumLoop()
                 //     rc_openmv_count=0;
                     
                 // }
+                AP_Mount *mount = AP::mount();
+                if (mount != nullptr) {
+                    mavlink_command_long_t packet;
+                    packet.command = MAV_CMD_DO_MOUNT_CONTROL;
+                    packet.param1 = -90;
+                    packet.param2 = 0;
+                    packet.param3 = 0;
+                    packet.param7 = 2;
+                    mount->handle_command_long(packet);
+                }
                 if(rc_openmv_count>3)
                 {
                     set_mode(Mode::Number::OPENMV, ModeReason::AVOIDANCE);
                     have_openmv_flag = true;
+                    have_move_flag = false;
                     rc_openmv_count=0;
                 }
                 copter.serial_concentrator.openmv_data[0].active=0;
@@ -140,31 +152,43 @@ void Copter::userhook_MediumLoop()
             else
             {
                if(copter.ahrs_view->get_relative_position_NED_home(veh))
-                {
-                    if(abs(veh.z)>2 && abs(veh.z)<8)
+                {                    
+                    if(abs(veh.z)>2 && abs(veh.z)<12 && !have_openmv_flag)
                     {
                         set_mode(Mode::Number::OPENMV, ModeReason::AVOIDANCE);
                         have_openmv_flag = true;
+                        have_move_flag = false;
+                        AP_Mount *mount = AP::mount();
+                        if (mount != nullptr) {
+                            mavlink_command_long_t packet;
+                            packet.command = MAV_CMD_DO_MOUNT_CONTROL;
+                            packet.param1 = -90;
+                            packet.param2 = 0;
+                            packet.param3 = 0;
+                            packet.param7 = 2;
+                            mount->handle_command_long(packet);
+                        }
                     }
                 } 
             }
-        }
-        //if(abs(copter.serial_concentrator.gimbal_st_u.pitch)> 85 && abs(copter.serial_concentrator.gimbal_st_u.pitch) <95)
-        {
-            AP_Mount *mount = AP::mount();
-            if (mount != nullptr) {
-                mavlink_command_long_t packet;
-                packet.command = MAV_CMD_DO_MOUNT_CONTROL;
-                packet.param1 = -90;
-                packet.param2 = 0;
-                packet.param3 = 0;
-                packet.param7 = 2;
-                mount->handle_command_long(packet);
-            }
-            gcs().send_text(MAV_SEVERITY_INFO,"rtl ctl pitch");
             
         }
-        have_move_flag=true;
+        //if(abs(copter.serial_concentrator.gimbal_st_u.pitch)> 85 && abs(copter.serial_concentrator.gimbal_st_u.pitch) <95)
+        // {
+        //     AP_Mount *mount = AP::mount();
+        //     if (mount != nullptr) {
+        //         mavlink_command_long_t packet;
+        //         packet.command = MAV_CMD_DO_MOUNT_CONTROL;
+        //         packet.param1 = -90;
+        //         packet.param2 = 0;
+        //         packet.param3 = 0;
+        //         packet.param7 = 2;
+        //         mount->handle_command_long(packet);
+        //     }
+        //     //gcs().send_text(MAV_SEVERITY_INFO,"rtl ctl pitch");
+            
+        // }
+        //have_move_flag=true;
     }
     if(get_mode() == 5)
     {
@@ -175,9 +199,9 @@ void Copter::userhook_MediumLoop()
     {
         have_move_flag=true;
     }
-    if(get_mode() == 3 && have_move_flag)
+    if(get_mode() == 3 )//|| get_mode() == 9 //不能添加land，最后下降是land
     {
-        if(g2.openmv_max_time)
+        if(g2.openmv_max_time && have_move_flag)
         {
             if( copter.serial_concentrator.openmv_data[0].active==1 || copter.serial_concentrator.openmv_data[1].active==1||copter.serial_concentrator.openmv_data[2].active==1||copter.serial_concentrator.openmv_data[3].active==1||copter.serial_concentrator.openmv_data[6].active==1)
             {
@@ -197,6 +221,7 @@ void Copter::userhook_MediumLoop()
                     set_mode(Mode::Number::OPENMV, ModeReason::AVOIDANCE);
                     rc_openmv_count=0;
                     have_openmv_flag = true;
+                    have_move_flag = false;
                 }
                 copter.serial_concentrator.openmv_data[0].active=0;
                 copter.serial_concentrator.openmv_data[1].active=0;
@@ -212,6 +237,7 @@ void Copter::userhook_MediumLoop()
                     {
                         set_mode(Mode::Number::OPENMV, ModeReason::AVOIDANCE);
                         have_openmv_flag = true;
+                        have_move_flag = false;
                     }
                 } 
             }
@@ -238,6 +264,7 @@ void Copter::userhook_SlowLoop()
 void Copter::userhook_SuperSlowLoop()
 {
     // put your 1Hz code here
+
 }
 #endif
 

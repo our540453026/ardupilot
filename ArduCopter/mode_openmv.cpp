@@ -140,7 +140,7 @@ void ModeOpenmv::run()
                 }
                 else
                 {
-                    if(abs(veh.z)>20)
+                    if(abs(veh.z)>40)
                     {
                         gcs().send_text(MAV_SEVERITY_INFO,"openmv ctr timer out");
                         target_climb_rate_mv=0;
@@ -169,6 +169,7 @@ void ModeOpenmv::run()
             if(copter.serial_concentrator.openmv_data[4].active)
             {
                 //mv_mid_flag = true;
+                max_speed=20;
                 mv_time = 0;
                 target_climb_rate_mv=0;
                 target_body_frame_x = copter.serial_concentrator.openmv_data[4].x-OPENMV_MID_X;  // 480*720  往左偏移一点
@@ -278,7 +279,7 @@ void ModeOpenmv::run()
                     AP::ahrs().get_relative_position_D_home(pos_d_h);
                     {
                         //if(abs(pos_d_h)<0.8)
-                        if(pos_d_h>=-0.8)
+                        if(pos_d_h>=-0.9)
                         {
                             mv_alt_check_time++;
                             if(mv_alt_check_time >=2)
@@ -306,17 +307,17 @@ void ModeOpenmv::run()
                         {
                             mv_alt_check_time=0;
                         
-                            if((pos_d_h)>=-1.6)
+                            if((pos_d_h)>=-3)
                             {
                                 target_climb_rate_mv=-10;
                                 max_x=35;
                                 max_y=20;
-                                max_speed=20;
+                                //max_speed=20;
                             }
-                            else
-                            {
-                                target_climb_rate_mv = -30;
-                            }
+                            // else
+                            // {
+                            //     target_climb_rate_mv = -20;
+                            // }
                         }
                     }
                     // else
@@ -447,7 +448,7 @@ void ModeOpenmv::run()
                     //copter.ahrs.get_relative_gps_D_home(pos_d_h);
                     AP::ahrs().get_relative_position_D_home(pos_d_h);
                     {
-                        if((pos_d_h)>=-1)
+                        if((pos_d_h)>=-1.1)
                         {
                             // mv_alt_check_time++;
                             // if(mv_alt_check_time >=5)
@@ -460,7 +461,7 @@ void ModeOpenmv::run()
                                 {
                                     max_x=100;
                                     max_y=100;
-                                    max_speed=100;
+                                    max_speed=20;
                                     ctr_timer=1;
                                     mv_alt_check_time=0;
                                 }
@@ -479,7 +480,7 @@ void ModeOpenmv::run()
                         {
                             //mv_alt_check_time=0;
                         
-                            if((pos_d_h)>=-2)
+                            if((pos_d_h)>=-3)
                             {
                                 target_climb_rate_mv=-10;
                                 max_x=35;
@@ -489,7 +490,14 @@ void ModeOpenmv::run()
                             }
                             else
                             {
-                                target_climb_rate_mv = -40;
+                                if((pos_d_h)>=-20) //处理异常
+                                {
+                                    target_climb_rate_mv = -30;
+                                }
+                                else
+                                {
+                                    target_climb_rate_mv = 0;
+                                }
                             }
                         }
                     }
@@ -510,274 +518,19 @@ void ModeOpenmv::run()
                 // gcs().send_text(MAV_SEVERITY_INFO,"ID7:x=%d,y=%d,P_d=%.2f,V=%.2f",target_body_frame_x,target_body_frame_y,pos_d_h,vef.z);
                 // gcs().send_text(MAV_SEVERITY_INFO,"ID7:t_r=%.1f,t_p=%.1f,t_y=%.1f,t_z=%.1f",target_roll_mv,target_pitch_mv,target_yaw_rate,target_climb_rate_mv);
 
-            }/*
-            else if(copter.serial_concentrator.openmv_data[0].active&&!mv_mid_flag)
-            {
-                mv_time = 0;
-                mv_alt_check_time=0;
-                mv_check_v_time=0;
-                //mv_pix_x_check_time=0;
-                target_climb_rate_mv=0;
-                target_body_frame_x = copter.serial_concentrator.openmv_data[0].x-OPENMV_MID_X;  //480*720
-                target_body_frame_y = copter.serial_concentrator.openmv_data[0].y-OPENMV_MID_Y;
-                copter.serial_concentrator.openmv_data[0].active=0;
-                copter.serial_concentrator.openmv_data[1].active=0;
-                copter.serial_concentrator.openmv_data[2].active=0;
-                copter.serial_concentrator.openmv_data[3].active=0;
-                if(copter.serial_concentrator.openmv_data[0].r>340 || copter.serial_concentrator.openmv_data[0].r<20)
-                {
-                    target_roll_mv = target_body_frame_x/OPENMV_MID_X*100;
-                    target_pitch_mv= target_body_frame_y/OPENMV_MID_Y*100;
-                    target_yaw_rate=0;
-                }
-                else
-                {
-                    target_roll_mv=0;
-                    target_pitch_mv=0;
-                    if(copter.serial_concentrator.openmv_data[0].r >=180)
-                    {
-                        if(copter.serial_concentrator.openmv_data[0].r>315)
-                        {
-                            target_yaw_rate =-100;
-                        }
-                        else if(copter.serial_concentrator.openmv_data[0].r>270)
-                        {
-                            target_yaw_rate =-500;
-                        }
-                        else
-                        {
-                            target_yaw_rate =-1000;
-                        }
-                        
-                    }
-                    else
-                    {
-                        if(copter.serial_concentrator.openmv_data[0].r<45)
-                        {
-                            target_yaw_rate =100;
-                        }
-                        else if(copter.serial_concentrator.openmv_data[0].r<90)
-                        {
-                            target_yaw_rate =500;
-                        }
-                        else
-                        {
-                            target_yaw_rate =1000;
-                        }
-                    }
-                }
-                if(copter.ahrs_view->get_relative_position_NED_home(veh))
-                {
-                    if(abs(veh.z)>6)
-                    {
-                        target_climb_rate_mv=-10;
-                    }
-                }
-                gcs().send_text(MAV_SEVERITY_INFO,"ID1:x=%d,y=%d",target_body_frame_x,target_body_frame_y);
-                gcs().send_text(MAV_SEVERITY_INFO,"ID1:target_roll=%f,target_pitch=%f,Yaw=%f",target_roll_mv,target_pitch_mv,target_yaw_rate);
             }
-            else if(copter.serial_concentrator.openmv_data[1].active&&!mv_mid_flag)
-            {
-                mv_time = 0;
-                mv_alt_check_time=0;
-                mv_check_v_time=0;
-                //mv_pix_x_check_time=0;
-                target_climb_rate_mv=0;
-                target_body_frame_x = copter.serial_concentrator.openmv_data[1].x-OPENMV_MID_X;  // 480*720
-                target_body_frame_y = copter.serial_concentrator.openmv_data[1].y-OPENMV_MID_Y;
-                copter.serial_concentrator.openmv_data[0].active=0;
-                copter.serial_concentrator.openmv_data[1].active=0;
-                copter.serial_concentrator.openmv_data[2].active=0;
-                copter.serial_concentrator.openmv_data[3].active=0;
-                //copter.serial_concentrator.openmv_data[6].active=0;
-                if(copter.serial_concentrator.openmv_data[1].r>340 || copter.serial_concentrator.openmv_data[1].r<20)
-                {
-                    target_roll_mv = target_body_frame_x/OPENMV_MID_X*100;
-                    target_pitch_mv= target_body_frame_y/OPENMV_MID_Y*100;
-                    target_yaw_rate=0;
-                }
-                else
-                {
-                    target_roll_mv=0;
-                    target_pitch_mv=0;
-                    if(copter.serial_concentrator.openmv_data[1].r >=180)
-                    {
-                        if(copter.serial_concentrator.openmv_data[1].r>315)
-                        {
-                            target_yaw_rate =-100;
-                        }
-                        else if(copter.serial_concentrator.openmv_data[1].r>270)
-                        {
-                            target_yaw_rate =-500;
-                        }
-                        else
-                        {
-                            target_yaw_rate =-1000;
-                        }
-                        
-                    }
-                    else
-                    {
-                        if(copter.serial_concentrator.openmv_data[1].r<45)
-                        {
-                            target_yaw_rate =100;
-                        }
-                        else if(copter.serial_concentrator.openmv_data[1].r<90)
-                        {
-                            target_yaw_rate =500;
-                        }
-                        else
-                        {
-                            target_yaw_rate =1000;
-                        }
-                    }
-                }
-                if(copter.ahrs_view->get_relative_position_NED_home(veh))
-                {
-                    if(abs(veh.z)>6)
-                    {
-                        target_climb_rate_mv=-10;
-                    }
-                }
-                gcs().send_text(MAV_SEVERITY_INFO,"ID2:x=%d,y=%d",target_body_frame_x,target_body_frame_y);
-                gcs().send_text(MAV_SEVERITY_INFO,"ID2:target_roll=%f,target_pitch=%f,Yaw=%f",target_roll_mv,target_pitch_mv,target_yaw_rate);
-            }
-            else if(copter.serial_concentrator.openmv_data[2].active&&!mv_mid_flag)
-            {
-                mv_time = 0;
-                mv_alt_check_time=0;
-                mv_check_v_time=0;
-                //mv_pix_x_check_time=0;
-                target_climb_rate_mv=0;
-                target_body_frame_x = copter.serial_concentrator.openmv_data[2].x-OPENMV_MID_X;  // 480*720
-                target_body_frame_y = copter.serial_concentrator.openmv_data[2].y-OPENMV_MID_Y;
-                copter.serial_concentrator.openmv_data[0].active=0;
-                copter.serial_concentrator.openmv_data[1].active=0;
-                copter.serial_concentrator.openmv_data[2].active=0;
-                copter.serial_concentrator.openmv_data[3].active=0;
-                //copter.serial_concentrator.openmv_data[6].active=0;
-                if(copter.serial_concentrator.openmv_data[2].r>340 || copter.serial_concentrator.openmv_data[2].r<20)
-                {
-                    target_roll_mv = target_body_frame_x/OPENMV_MID_X*100;
-                    target_pitch_mv= target_body_frame_y/OPENMV_MID_Y*100;
-                    target_yaw_rate=0;
-                }
-                else
-                {
-                    target_roll_mv=0;
-                    target_pitch_mv=0;
-                    if(copter.serial_concentrator.openmv_data[2].r >=180)
-                    {
-                        if(copter.serial_concentrator.openmv_data[2].r>315)
-                        {
-                            target_yaw_rate =-100;
-                        }
-                        else if(copter.serial_concentrator.openmv_data[2].r>270)
-                        {
-                            target_yaw_rate =-500;
-                        }
-                        else
-                        {
-                            target_yaw_rate =-1000;
-                        }
-                        
-                    }
-                    else
-                    {
-                        if(copter.serial_concentrator.openmv_data[2].r<45)
-                        {
-                            target_yaw_rate =100;
-                        }
-                        else if(copter.serial_concentrator.openmv_data[2].r<90)
-                        {
-                            target_yaw_rate =500;
-                        }
-                        else
-                        {
-                            target_yaw_rate =1000;
-                        }
-                    }
-                }
-                if(copter.ahrs_view->get_relative_position_NED_home(veh))
-                {
-                    if(abs(veh.z)>6)
-                    {
-                        target_climb_rate_mv=-10;
-                    }
-                }
-                gcs().send_text(MAV_SEVERITY_INFO,"ID3:x=%d,y=%d",target_body_frame_x,target_body_frame_y);
-                gcs().send_text(MAV_SEVERITY_INFO,"ID3:target_roll=%f,target_pitch=%f,Yaw=%f",target_roll_mv,target_pitch_mv,target_yaw_rate);
-            }
-            else if(copter.serial_concentrator.openmv_data[3].active &&!mv_mid_flag)
-            {
-                mv_time = 0;
-                mv_alt_check_time=0;
-                mv_check_v_time=0;
-                //mv_pix_x_check_time=0;
-                target_climb_rate_mv=0;
-                target_body_frame_x = copter.serial_concentrator.openmv_data[3].x-OPENMV_MID_X;  // 720*480
-                target_body_frame_y = copter.serial_concentrator.openmv_data[3].y-OPENMV_MID_Y;
-                copter.serial_concentrator.openmv_data[0].active=0;
-                copter.serial_concentrator.openmv_data[1].active=0;
-                copter.serial_concentrator.openmv_data[2].active=0;
-                copter.serial_concentrator.openmv_data[3].active=0;
-                //copter.serial_concentrator.openmv_data[6].active=0;
-                if(copter.serial_concentrator.openmv_data[3].r>340 || copter.serial_concentrator.openmv_data[3].r<20)
-                {
-                    target_roll_mv = target_body_frame_x/OPENMV_MID_X*100;
-                    target_pitch_mv= target_body_frame_y/OPENMV_MID_Y*100;
-                    target_yaw_rate=0;
-                }
-                else
-                {
-                    target_roll_mv=0;
-                    target_pitch_mv=0;
-                    if(copter.serial_concentrator.openmv_data[3].r >=180)
-                    {
-                        if(copter.serial_concentrator.openmv_data[3].r>315)
-                        {
-                            target_yaw_rate =-100;
-                        }
-                        else if(copter.serial_concentrator.openmv_data[3].r>270)
-                        {
-                            target_yaw_rate =-500;
-                        }
-                        else
-                        {
-                            target_yaw_rate =-1000;
-                        }
-                        
-                    }
-                    else
-                    {
-                        if(copter.serial_concentrator.openmv_data[3].r<45)
-                        {
-                            target_yaw_rate =100;
-                        }
-                        else if(copter.serial_concentrator.openmv_data[3].r<90)
-                        {
-                            target_yaw_rate =500;
-                        }
-                        else
-                        {
-                            target_yaw_rate =1000;
-                        }
-                    }
-                }
-                if(copter.ahrs_view->get_relative_position_NED_home(veh))
-                {
-                    if(abs(veh.z)>6)
-                    {
-                        target_climb_rate_mv=-10;
-                    }
-                }
-                gcs().send_text(MAV_SEVERITY_INFO,"ID4:x=%d,y=%d",target_body_frame_x,target_body_frame_y);
-                gcs().send_text(MAV_SEVERITY_INFO,"ID4:target_roll=%f,target_pitch=%f,Yaw=%f",target_roll_mv,target_pitch_mv,target_yaw_rate);
-            }
-        
-            */
             mv_time++;
-            if(mv_time==5000) gcs().send_text(MAV_SEVERITY_INFO,"clear mv target=%f",target_climb_rate);
+            if(mv_time%500==0) //gcs().send_text(MAV_SEVERITY_INFO,"clear mv target=%f",target_climb_rate);
+            {
+                AP::ahrs().get_relative_position_D_home(pos_d_h);
+                if(pos_d_h>=-3)
+                {
+                    target_roll_mv=0;
+                    target_pitch_mv=0;
+                    target_climb_rate_mv=0;
+                    gcs().send_text(MAV_SEVERITY_INFO,"cl=%f",pos_d_h);
+                }
+            }
             if(mv_time >=5000)
             {
                 //mv_mid_flag=false;
@@ -809,7 +562,7 @@ void ModeOpenmv::run()
                                 ctr_timer=1;
                                 mv_alt_check_time=0;
                                // set_mode(Mode::Number::LAND, ModeReason::AVOIDANCE);
-                                gcs().send_text(MAV_SEVERITY_INFO,"*************target land*********");
+                                gcs().send_text(MAV_SEVERITY_INFO,"reset mv land:%f",pos_d_h);
                             }
                         }
                         target_climb_rate_mv=0;

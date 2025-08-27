@@ -10,13 +10,21 @@ public:
 
     struct PACKED tofp_t
         {
-            uint8_t reserved;
-            uint8_t id;
-            uint32_t System_time;
-            uint32_t dis;
-            uint8_t dis_status;
+            // uint8_t reserved;
+            // uint8_t id;
+            // uint32_t System_time;
+            // uint32_t dis;
+            // uint8_t dis_status;
+            // uint16_t signal_strength;
+            // uint8_t range_precision;
+            //sdam
+            uint16_t reserved1;
+            uint16_t reserved2;
+            uint16_t reserved3;
+            uint16_t dis;
+            uint16_t reserved4;
             uint16_t signal_strength;
-            uint8_t range_precision;
+            uint16_t reserved5;
 
         };
     // constructor
@@ -37,11 +45,14 @@ private:
     // get a reading
     // distance returned in reading_cm
     uint8_t SendHz;
+    uint16_t TOFP_crc;
     uint32_t last_time;
-    uint8_t decode( uint8_t *data);
+    //uint8_t decode( uint8_t *data);
+    uint16_t crc16_modbus(uint8_t *data, uint16_t length);
     bool get_reading(float &reading_m) override;
     union PACKED TOFPbuffer {
-                    uint8_t bytes[15];
+                    uint8_t bytes[32];
+                    tofp_t tofp;
                 };
     struct PACKED data_msg_parser
         {
@@ -49,13 +60,22 @@ private:
             {
                 PREAMBLE1 = 0,
                 PREAMBLE2,
+                PREAMBLE3,
+                CMD,
+                PREAMBLE4,
+                LENGTH1,
+                LENGTH2,
                 DATA,
                 CRC1,
+                CRC2,
             } TOFP_state;
             TOFPbuffer data;
-            uint8_t crc;
+            uint16_t crc;
             uint16_t read_count;
-            tofp_t tofp;
+            uint16_t length;
+            uint8_t cmd;
+            uint8_t buf[32];
+            
         } data_msg;
         static const uint8_t  TOFP_FRAME_HEADER1 = 0x57;
         static const uint8_t TOFP_FRAME_HEADER2 = 0x00;
