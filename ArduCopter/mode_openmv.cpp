@@ -1,4 +1,5 @@
 #include "Copter.h"
+#include <AC_PID/AC_PID.h>
 
 #if MODE_OPENMV_ENABLED == ENABLED
 #define OPENMV_MID_X 320.0
@@ -6,6 +7,19 @@
 
 // #define OPENMV_MID_X 544.0
 // #define OPENMV_MID_Y 360.0
+
+// PID控制器参数
+#define PID_P_ROLL 0.8f
+#define PID_I_ROLL 0.05f
+#define PID_D_ROLL 0.1f
+
+#define PID_P_PITCH 0.8f
+#define PID_I_PITCH 0.05f
+#define PID_D_PITCH 0.1f
+
+#define PID_IMAX 10.0f
+#define PID_FILTER 5.0f
+
 /*
  * Init and run calls for loiter flight mode
  */
@@ -43,7 +57,9 @@ bool ModeOpenmv::init(bool ignore_checks)
 #endif
     ctr_timer = g2.openmv_max_time*500;
     ctr_count = g2.openmv_max_count;
-     gcs().send_text(MAV_SEVERITY_INFO,"openmv max time %ld",ctr_timer);
+    
+    
+    gcs().send_text(MAV_SEVERITY_INFO,"openmv max time %ld",ctr_timer);
     return true;
 }
 
@@ -88,6 +104,7 @@ void ModeOpenmv::precision_loiter_xy()
 // should be called at 100hz or more
 void ModeOpenmv::run()
 {
+    
     //static bool mv_mid_flag = false;
     static float target_roll_mv=0;
     static float target_pitch_mv=0;
@@ -95,8 +112,10 @@ void ModeOpenmv::run()
     float target_roll_rc, target_pitch_rc;
     static float target_yaw_rate = 0.0f;
     float target_climb_rate = 0.0f;
-    static int mv_time = 0;
-    static int mv_alt_check_time = 0;
+    static u_int16_t max_mv_time_x = 0;
+    static u_int16_t max_mv_time_Y = 0;
+    static u_int16_t mv_time = 0;
+    static u_int16_t mv_alt_check_time = 0;
     //static int mv_pix_x_check_time = 0;
     //static int mv_check_v_time = 0;
     int16_t target_body_frame_x=0;
@@ -104,9 +123,9 @@ void ModeOpenmv::run()
     Vector3f vef;
     Vector3f veh;
     float pos_d_h;
-    static int32_t max_x=100;
-    static int32_t max_y=100;
-    static int32_t max_speed=50;
+    static int16_t max_x=100;
+    static int16_t max_y=100;
+    static int16_t max_speed=50;
     // copter.serial_concentrator.openmv_data[6].active=1;
     // copter.serial_concentrator.openmv_data[6].r =80;
     // copter.serial_concentrator.openmv_data[6].ipx_x_d = 10000;
@@ -132,6 +151,10 @@ void ModeOpenmv::run()
                 {
                     if(abs(veh.z)>12)
                     {
+                        max_mv_time_x = 0;
+                        max_mv_time_Y = 0;
+                        max_x=100;
+                        max_y=100;
                         target_climb_rate_mv=-30;
                         ctr_count--;
                         ctr_timer = g2.openmv_max_time*500;
@@ -183,8 +206,44 @@ void ModeOpenmv::run()
                 {
                     target_roll_mv = target_body_frame_x/OPENMV_MID_X*max_speed;
                     target_pitch_mv= target_body_frame_y/OPENMV_MID_Y*max_speed;
-                    // target_roll_mv = roll_pid.calculate(target_body_frame_x)*max_speed;
-                    // target_pitch_mv = pitch_pid.calculate(target_body_frame_y)*max_speed;
+                    // 使用PID控制器替代简单的比例控制
+                    // 设置目标和实际值用于日志记录
+                    roll_pid.set_target_rate(0);
+                    roll_pid.set_actual_rate(-target_body_frame_x);
+                    pitch_pid.set_target_rate(0);
+                    pitch_pid.set_actual_rate(-target_body_frame_y);
+                    
+                    // 更新PID控制器并获取输出
+                    target_roll_mv = roll_pid.update_all(0, -target_body_frame_x, G_Dt, false)/OPENMV_MID_X*max_speed;
+                    target_pitch_mv = pitch_pid.update_all(0, -target_body_frame_y, G_Dt, false)/OPENMV_MID_Y*max_speed;
+                    
+                    // 限制输出范围
+                    target_roll_mv = constrain_float(target_roll_mv, -max_speed, max_speed);
+                    target_pitch_mv = constrain_float(target_pitch_mv, -max_speed, max_speed);
+                    if(target_roll_mv >=(max_speed -2))
+                    {
+                        max_mv_time_x++;
+                        if(max_mv_time_x > 20)
+                        {
+                            target_roll_mv=0;
+                        }
+                    }
+                    else
+                    {
+                        max_mv_time_x=0;
+                    }
+                    if(target_pitch_mv >=(max_speed -2))
+                    {
+                        max_mv_time_Y++;
+                        if(max_mv_time_Y > 20)
+                        {
+                            target_pitch_mv=0;
+                        }
+                    }
+                    else
+                    {
+                        max_mv_time_Y=0;
+                    }
                     target_yaw_rate=0;
 
                 }
@@ -231,7 +290,8 @@ void ModeOpenmv::run()
                 if(abs(target_body_frame_x)<max_x && abs(target_body_frame_y)<max_y)
                 //if((0<target_body_frame_x && target_body_frame_x<20) && abs(target_body_frame_y)<max_y)
                 {
-                    
+                    target_roll_mv=0;
+                    target_pitch_mv=0;
                     /*if (copter.ahrs_view->get_velocity_NED(vef)) 
                     {
                         
@@ -279,13 +339,13 @@ void ModeOpenmv::run()
                     AP::ahrs().get_relative_position_D_home(pos_d_h);
                     {
                         //if(abs(pos_d_h)<0.8)
-                        if(pos_d_h>=-0.9)
+                        if(pos_d_h>=-0.8)
                         {
                             mv_alt_check_time++;
                             if(mv_alt_check_time >=2)
                             {
-                                target_roll_mv=0;
-                                target_pitch_mv=0;
+                                // target_roll_mv=0;
+                                // target_pitch_mv=0;
                                 max_x=50;
                                 max_y=50;
                                 //target_climb_rate_mv=0;
@@ -334,8 +394,8 @@ void ModeOpenmv::run()
                     
                 }
                 // gcs().send_text(MAV_SEVERITY_INFO,"ID5:ti_al=%d,ti_v=%d",mv_alt_check_time,mv_check_v_time);
-                //gcs().send_text(MAV_SEVERITY_INFO,"ID5:x=%d,y=%d,P_d=%.2f,V=%.2f",target_body_frame_x,target_body_frame_y,pos_d_h,vef.z);
-                // gcs().send_text(MAV_SEVERITY_INFO,"ID5:t_r=%.1f,t_p=%.1f,t_y=%.1f,t_z=%.1f",target_roll_mv,target_pitch_mv,target_yaw_rate,target_climb_rate_mv);
+                gcs().send_text(MAV_SEVERITY_INFO,"ID5:x=%d,y=%d,P_d=%.2f,M_v=%d",target_body_frame_x,target_body_frame_y,pos_d_h,max_speed);
+                gcs().send_text(MAV_SEVERITY_INFO,"ID5:t_r=%.1f,p_h=%.1f,t_z=%.1f",target_roll_mv,target_pitch_mv,target_climb_rate_mv);
 
             }
             else if(copter.serial_concentrator.openmv_data[6].active)
@@ -352,10 +412,21 @@ void ModeOpenmv::run()
                 copter.serial_concentrator.openmv_data[6].active=0;
                 if(copter.serial_concentrator.openmv_data[6].r>357 || copter.serial_concentrator.openmv_data[6].r<3)
                 {
-                    target_roll_mv = target_body_frame_x/OPENMV_MID_X*max_speed;
-                    target_pitch_mv= target_body_frame_y/OPENMV_MID_Y*max_speed;
-                    // target_roll_mv = roll_pid.calculate(target_body_frame_x)*max_speed;
-                    // target_pitch_mv = pitch_pid.calculate(target_body_frame_y)*max_speed;
+                    // 使用PID控制器替代简单的比例控制
+                    // 设置目标和实际值用于日志记录
+                    roll_pid.set_target_rate(0);
+                    roll_pid.set_actual_rate(-target_body_frame_x);
+                    pitch_pid.set_target_rate(0);
+                    pitch_pid.set_actual_rate(-target_body_frame_y);
+                    
+                    // 更新PID控制器并获取输出
+                    target_roll_mv = roll_pid.update_all(0, -target_body_frame_x, G_Dt, false)/OPENMV_MID_X*max_speed;
+                    target_pitch_mv = pitch_pid.update_all(0, -target_body_frame_y, G_Dt, false)/OPENMV_MID_Y*max_speed;
+                    
+                    // 限制输出范围
+                    target_roll_mv = constrain_float(target_roll_mv, -max_speed, max_speed);
+                    target_pitch_mv = constrain_float(target_pitch_mv, -max_speed, max_speed);
+                    
                     target_yaw_rate=0;
 
                 }
@@ -399,6 +470,7 @@ void ModeOpenmv::run()
                 
                 //float distance_x =target_body_frame_x*copter.serial_concentrator.openmv_data[6].ipx_x_d/1000;
                 //float distance_y =target_body_frame_y*copter.serial_concentrator.openmv_data[6].ipx_y_d/1000;
+                //if(abs(target_body_frame_x)<max_x && abs(target_body_frame_y)<max_y)
                 if(abs(target_body_frame_x)<max_x && abs(target_body_frame_y)<max_y)
                 {
                     
@@ -448,7 +520,7 @@ void ModeOpenmv::run()
                     //copter.ahrs.get_relative_gps_D_home(pos_d_h);
                     AP::ahrs().get_relative_position_D_home(pos_d_h);
                     {
-                        if((pos_d_h)>=-1.1)
+                        if((pos_d_h)>=-1.3)
                         {
                             // mv_alt_check_time++;
                             // if(mv_alt_check_time >=5)
@@ -456,15 +528,15 @@ void ModeOpenmv::run()
                                 target_roll_mv=0;
                                 target_pitch_mv=0;
                                 target_climb_rate_mv=0;
-                                mv_alt_check_time++;
-                                if(mv_alt_check_time >20)
-                                {
-                                    max_x=100;
-                                    max_y=100;
-                                    max_speed=20;
-                                    ctr_timer=1;
-                                    mv_alt_check_time=0;
-                                }
+                                //mv_alt_check_time++;
+                                // if(mv_alt_check_time >20)
+                                // {
+                                //     max_x=35;
+                                //     max_y=20;
+                                //     max_speed=20;
+                                //     //ctr_timer=1;
+                                //     mv_alt_check_time=0;
+                                // }
                             //     if(mv_alt_check_time >=10)
                             //     {
                             //         max_x=100;
@@ -482,7 +554,7 @@ void ModeOpenmv::run()
                         
                             if((pos_d_h)>=-3)
                             {
-                                target_climb_rate_mv=-10;
+                                target_climb_rate_mv=-20;
                                 max_x=35;
                                 max_y=20;
                                 max_speed=20;
@@ -490,7 +562,7 @@ void ModeOpenmv::run()
                             }
                             else
                             {
-                                if((pos_d_h)>=-20) //处理异常
+                                if((pos_d_h)>=-50) //处理异常
                                 {
                                     target_climb_rate_mv = -30;
                                 }
@@ -517,10 +589,11 @@ void ModeOpenmv::run()
                 // gcs().send_text(MAV_SEVERITY_INFO,"ID7:ti_al=%d,ti_v=%d",mv_alt_check_time,mv_check_v_time);
                 // gcs().send_text(MAV_SEVERITY_INFO,"ID7:x=%d,y=%d,P_d=%.2f,V=%.2f",target_body_frame_x,target_body_frame_y,pos_d_h,vef.z);
                 // gcs().send_text(MAV_SEVERITY_INFO,"ID7:t_r=%.1f,t_p=%.1f,t_y=%.1f,t_z=%.1f",target_roll_mv,target_pitch_mv,target_yaw_rate,target_climb_rate_mv);
-
+                gcs().send_text(MAV_SEVERITY_INFO,"ID7:x=%d,y=%d,P_d=%.2f,M_v=%d",target_body_frame_x,target_body_frame_y,pos_d_h,max_speed);
+                gcs().send_text(MAV_SEVERITY_INFO,"ID7:t_r=%.1f,p_h=%.1f,t_z=%.1f",target_roll_mv,target_pitch_mv,target_climb_rate_mv);
             }
             mv_time++;
-            if(mv_time%500==0) //gcs().send_text(MAV_SEVERITY_INFO,"clear mv target=%f",target_climb_rate);
+            if(mv_time==500) //gcs().send_text(MAV_SEVERITY_INFO,"clear mv target=%f",target_climb_rate);
             {
                 AP::ahrs().get_relative_position_D_home(pos_d_h);
                 if(pos_d_h>=-3)
@@ -546,7 +619,7 @@ void ModeOpenmv::run()
                  target_climb_rate_mv=0;
                 if(copter.ahrs_view->get_relative_position_NED_home(veh))
                 {
-                    if(abs(veh.z)<4)
+                    if(abs(veh.z)<3)
                     {
                         mv_alt_check_time++;
                         if(mv_alt_check_time >1000)

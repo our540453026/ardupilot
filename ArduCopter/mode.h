@@ -1253,6 +1253,11 @@ class ModeOpenmv : public Mode {
         bool _precision_loiter_active; // true if user has switched on prec loiter
     #endif
     
+        // PID控制器用于稳定控制
+        AC_PID roll_pid{0.8f, 0.05f, 0.1f, 0.0f, 10.0f, 5.0f, 5.0f, 5.0f};
+        AC_PID pitch_pid{0.8f, 0.05f, 0.1f, 0.0f, 10.0f, 5.0f, 5.0f, 5.0f};
+        
+    
     };
 class ModePosHold : public Mode {
 
