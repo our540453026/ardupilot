@@ -57,6 +57,7 @@
 #define UAV_GET_HOME_GPS_MSG_ID 0x000D
 #define UAV_AVOID_MSG_ID   0x000F
 #define UAV_TEMP_MSG_ID   0x0011
+#define UAV_ALL_AVOID_MSG_ID   0x0012
 #define UAV_ESC_MSG_ID     0x000E
 #define BMS_TYPE 	0x02
 #define BMS_STATUE_MSG_ID   0x0101
@@ -126,6 +127,15 @@ public:
             uint8_t cam_result; /*<  0x01--正常接收*/
             uint8_t gim_result; /*< 0x01--正常接收*/
                  
+        };
+        struct PACKED all_avoid_t
+        {
+            uint16_t front_cm;
+            uint16_t back_cm;
+            uint16_t	left_cm;
+            uint16_t	right_cm;
+            uint16_t	up_cm;
+            uint16_t down_cm;
         };
         struct PACKED openmv_t
         {
@@ -218,6 +228,7 @@ public:
         };
         
     uint32_t        _last_update_time;
+    uint32_t        _avoid_last_update_time;
     bool    Tx_urgent_statue = false;
     typedef struct
         {
@@ -251,9 +262,10 @@ public:
     void send_camare_ctl(uint8_t cmd, uint32_t id,uint32_t param);
     bms_staute_t bms_state;
     gimbal_t gimbal_state;
+    all_avoid_t all_avoid_u;
     gimbal_st_t gimbal_st_u;
     openmv_t openmv_data[8];
-
+    
     static AP_SerialConcentrator *get_singleton(void) { return _singleton; }
 private:
     uint16_t g_crc_val,test_counter;
@@ -279,6 +291,7 @@ private:
                 gimbal_st_t gimbal_st_u;
                 esc_st_t esc_st;
                 openmv_parse_t openmv_u;
+                all_avoid_t all_avoid_u;
                 uint8_t bytes[256];
             };
     struct PACKED data_msg_parser

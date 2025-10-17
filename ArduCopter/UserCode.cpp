@@ -72,6 +72,77 @@ void Copter::userhook_50Hz()
             }
         }
     }
+    if(get_mode() == 3 || get_mode() == 29 )
+    {                        
+        if(ahrs_view->groundspeed() > 0.5 && copter.serial_concentrator.all_avoid_u.front_cm>50 && copter.serial_concentrator.all_avoid_u.front_cm < g.avoid_distan_m*100)
+        {
+
+            if(g.avoid_behavior==1)
+            {
+                    set_mode(Mode::Number::RTL, ModeReason::AVOIDANCE);
+            }
+            else if(g.avoid_behavior==2)
+            {
+                    set_mode(Mode::Number::SMART_RTL, ModeReason::AVOIDANCE);
+            }
+            else
+            {
+                    set_mode(Mode::Number::LOITER, ModeReason::AVOIDANCE);
+            }
+        }
+    }
+    if(copter.serial_concentrator.all_avoid_u.front_cm>50 && copter.serial_concentrator.all_avoid_u.front_cm < g.avoid_distan_m*100)
+    {
+        have_avoid_front_flag = true;
+        no_avoid_count_front=0;
+    }
+    else
+    {
+        no_avoid_count_front++;
+    }
+    if(copter.serial_concentrator.all_avoid_u.back_cm>50 && copter.serial_concentrator.all_avoid_u.back_cm < g.avoid_distan_m*100)
+    {
+        have_avoid_back_flag = true;
+        no_avoid_count_back=0;
+    }
+    else
+    {
+        no_avoid_count_back++;
+    }
+    if(copter.serial_concentrator.all_avoid_u.left_cm>50 && copter.serial_concentrator.all_avoid_u.left_cm < g.avoid_distan_m*100)
+    {
+        have_avoid_left_flag = true;
+        no_avoid_count_left=0;
+    }
+    else
+    {
+        no_avoid_count_left++;
+    }
+    if(copter.serial_concentrator.all_avoid_u.right_cm>50 && copter.serial_concentrator.all_avoid_u.right_cm < g.avoid_distan_m*100)
+    {
+        have_avoid_right_flag = true;
+        no_avoid_count_right=0;
+    }
+    else
+    {
+        no_avoid_count_right++;
+    }
+    if(no_avoid_count_front>150)
+    {
+        have_avoid_front_flag = false;
+    }
+    if(no_avoid_count_back>150)
+    {
+        have_avoid_back_flag = false;
+    }
+    if(no_avoid_count_left>150)
+    {
+        have_avoid_left_flag = false;
+    }
+    if(no_avoid_count_right>150)
+    {
+        have_avoid_right_flag = false;
+    }
     // avoid_rtl_delay++;
     // if(avoid_rtl_flag && avoid_rtl_delay >150)
     // {

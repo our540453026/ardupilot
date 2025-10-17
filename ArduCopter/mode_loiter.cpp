@@ -102,7 +102,22 @@ void ModeLoiter::run()
 
         // convert pilot input to lean angles
         get_pilot_desired_lean_angles(target_roll, target_pitch, loiter_nav->get_angle_max_cd(), attitude_control->get_althold_lean_angle_max_cd());
-
+        if(copter.have_avoid_front_flag && target_pitch<-10 )
+        {
+            target_pitch=0;
+        }
+        if(copter.have_avoid_back_flag && target_pitch>10 )
+        {
+            target_pitch=0;
+        }
+        if(copter.have_avoid_left_flag && target_roll<-10 )
+        {
+            target_roll=0;
+        }
+        if(copter.have_avoid_right_flag && target_roll>10 )
+        {
+            target_roll=0;
+        }
         // process pilot's roll and pitch input
         loiter_nav->set_pilot_desired_acceleration(target_roll, target_pitch);
 

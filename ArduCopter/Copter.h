@@ -237,8 +237,16 @@ public:
     uint16_t avoid_rtl_count=0;
     bool avoid_rtl_flag=false;
     uint16_t rc_openmv_count=0;
+    uint16_t no_avoid_count_front=0;
+    uint16_t no_avoid_count_back=0;
+    uint16_t no_avoid_count_left=0;
+    uint16_t no_avoid_count_right=0;
     bool have_move_flag=false;
     bool have_openmv_flag=false;
+    bool have_avoid_front_flag=false;
+    bool have_avoid_back_flag=false;
+    bool have_avoid_left_flag=false;
+    bool have_avoid_right_flag=false;
 private:
 
     // key aircraft parameters passed to multiple libraries

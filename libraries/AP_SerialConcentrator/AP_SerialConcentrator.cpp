@@ -391,6 +391,16 @@ void AP_SerialConcentrator::update_disconnect(void)
             openmv_data[i].last_update_time = AP_HAL::millis();
         }
     }
+    if(AP_HAL::millis()- _avoid_last_update_time >2000)
+    {
+        all_avoid_u.front_cm=0;
+        all_avoid_u.back_cm=0;
+        all_avoid_u.left_cm=0;
+        all_avoid_u.right_cm=0;
+        all_avoid_u.up_cm=0;
+        all_avoid_u.down_cm=0;
+        _avoid_last_update_time = AP_HAL::millis();
+    }
 }
 uint16_t AP_SerialConcentrator::crcSum(uint8_t *dat,uint8_t n)
 {
@@ -508,6 +518,36 @@ bool AP_SerialConcentrator::Data_Message_Process(void)
     //gcs().send_text(MAV_SEVERITY_INFO,"bmsupdateok=%d",hal.gpio->read(61));
     switch(data_msg.msgid)
     {
+        case UAV_ALL_AVOID_MSG_ID:
+            all_avoid_u.front_cm = swapInt16(data_msg.data.all_avoid_u.front_cm);
+            all_avoid_u.back_cm = swapInt16(data_msg.data.all_avoid_u.back_cm);
+            all_avoid_u.left_cm = swapInt16(data_msg.data.all_avoid_u.left_cm);
+            all_avoid_u.right_cm = swapInt16(data_msg.data.all_avoid_u.right_cm);
+            all_avoid_u.up_cm = swapInt16(data_msg.data.all_avoid_u.up_cm);
+            all_avoid_u.down_cm = swapInt16(data_msg.data.all_avoid_u.down_cm);
+
+            len = data_msg.length-5;
+            EnMesQueue(&usart_rx_fifo,0xAB);
+            EnMesQueue(&usart_rx_fifo,0xCB);
+            EnMesQueue(&usart_rx_fifo,(data_msg.length>>8));
+            EnMesQueue(&usart_rx_fifo,data_msg.length);
+            EnMesQueue(&usart_rx_fifo,data_msg.comptype);
+            EnMesQueue(&usart_rx_fifo,0x00);
+            EnMesQueue(&usart_rx_fifo,0x12);
+            for(int i = 0; i <len;i++) 
+            {
+                EnMesQueue(&usart_rx_fifo,data_msg.data.bytes[i]);
+            }
+            EnMesQueue(&usart_rx_fifo,data_msg.crc>>8);
+            EnMesQueue(&usart_rx_fifo,data_msg.crc);
+            _avoid_last_update_time = AP_HAL::millis();
+            delay_n++;
+           if(delay_n > 10)
+           {
+                delay_n = 0;
+              gcs().send_text(MAV_SEVERITY_INFO,"dis=%d,%d,%d,%d",all_avoid_u.front_cm,all_avoid_u.back_cm,all_avoid_u.left_cm,all_avoid_u.right_cm);
+           }
+            break;
         case BMS_STATUE_MSG_ID:
             bms_state.voltages = (swapInt16(data_msg.data.bms.voltages) & 0x0000FFFF);
             //bms_state.charge_count = swapInt16(data_msg.data.bms.charge_count);
