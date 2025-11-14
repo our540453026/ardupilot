@@ -260,6 +260,7 @@ public:
     void send_camare_record_on(void);
     void send_camare_record_off(void);
     void send_camare_ctl(uint8_t cmd, uint32_t id,uint32_t param);
+    bool parse(uint8_t temp);
     bms_staute_t bms_state;
     gimbal_t gimbal_state;
     all_avoid_t all_avoid_u;
@@ -279,7 +280,7 @@ private:
     bool Data_Message_Process(void);
     void update_disconnect(void);
     uint16_t crcSum(uint8_t *dat,uint8_t n);
-    bool parse(uint8_t temp);
+    
     static const uint8_t DATA_PREAMBLE1 = 0xAB;
     static const uint8_t DATA_PREAMBLE2 = 0xCB;
     AP_HAL:: UARTDriver *_port;

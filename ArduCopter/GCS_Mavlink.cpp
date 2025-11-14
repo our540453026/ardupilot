@@ -1445,12 +1445,24 @@ void GCS_MAVLINK_Copter::handleMessage(const mavlink_message_t &msg)
             }
             else
             {
+                if(packet.payload[6]==0x04 && packet.payload[7]==0x01) //OPENMV_STATUE_ID_MSG_ID
+                {
+                    for(int i=0;i<packet.payload[0];i++)
+                    {
+                        copter.serial_concentrator.parse(packet.payload[i+1]);
+                    }
+                    
+
+                }
+                else
+                {
                 //send_v2_extension(&packet.payload[1], packet.payload[0]); //gcs发到云台
-                gcs().send_msg_v2_extension(&packet.payload[1],packet.payload[0],154); //云台发到gcs
+                    gcs().send_msg_v2_extension(&packet.payload[1],packet.payload[0],154); //云台发到gcs
+                }
                 //gcs().send_text(MAV_SEVERITY_INFO,"v2 com=%d,sys=%d",packet.target_component,packet.target_system);
             }
             // gcs().send_text(MAV_SEVERITY_INFO,"v2 com=%d,sys=%d",packet.target_component,packet.target_system);
-            // gcs().send_text(MAV_SEVERITY_INFO,"v2 com1:%x,%x,%x,%x,%x,%x,%x",packet.payload[1],packet.payload[2],packet.payload[3],packet.payload[4],packet.payload[5],packet.payload[6],packet.payload[7]);
+             //gcs().send_text(MAV_SEVERITY_INFO,"v2 com1:%x,%x,%x,%x,%x,%x,%x",packet.payload[1],packet.payload[2],packet.payload[3],packet.payload[4],packet.payload[5],packet.payload[6],packet.payload[7]);
         }
         break; 
     case MAVLINK_MSG_ID_ATTITUDE:
