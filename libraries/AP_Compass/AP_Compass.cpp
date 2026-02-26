@@ -2125,9 +2125,11 @@ void Compass::handle_msp(const MSP::msp_compass_data_message_t &pkt)
 #if AP_COMPASS_EXTERNALAHRS_ENABLED
 void Compass::handle_external(const AP_ExternalAHRS::mag_data_message_t &pkt)
 {
+    // 检查外部AHRS驱动是否启用
     if (!_driver_enabled(DRIVER_EXTERNALAHRS)) {
         return;
     }
+    // 将外部磁力数据传递给所有后端处理
     for (uint8_t i=0; i<_backend_count; i++) {
         _backends[i]->handle_external(pkt);
     }

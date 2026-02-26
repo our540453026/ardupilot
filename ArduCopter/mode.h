@@ -1234,6 +1234,8 @@ class ModeOpenmv : public Mode {
     
         const char *name() const override { return "OPENMV"; }
         const char *name4() const override { return "OPMV"; }
+        bool start_land_flag;
+        bool set_home_flag;
         uint16_t ctr_count;
         int32_t ctr_timer;
         uint32_t wp_distance() const override;

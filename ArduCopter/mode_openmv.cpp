@@ -57,8 +57,26 @@ bool ModeOpenmv::init(bool ignore_checks)
 #endif
     ctr_timer = g2.openmv_max_time*500;
     ctr_count = g2.openmv_max_count;
+    start_land_flag = false;
+    set_home_flag = false;
+    Location new_home_loc;
+    new_home_loc.lat=g2.openmv_lat;
+    new_home_loc.lng=g2.openmv_lng;
+    new_home_loc.alt=copter.ahrs.get_home().alt;//AP::ahrs().get_home().alt;//g2.openmv_alt*100;//cm
     
-    
+    if(new_home_loc.lat !=0 && new_home_loc.lng!=0 && new_home_loc.alt !=0 && abs(new_home_loc.lat - copter.ahrs.get_home().lat) <=1000000 )
+    {
+        //gcs().send_text(MAV_SEVERITY_INFO,"home lat: %ld ",new_home_loc.lat,new_home_loc.lng,new_home_loc.alt,copter.ahrs.get_home().lat);
+        if(copter.set_home(new_home_loc, false))
+        {
+            set_home_flag = true;
+            gcs().send_text(MAV_SEVERITY_INFO,"openmv set home lat: %ld lng: %ld,alt:%ld,home alt:%ld",new_home_loc.lat,new_home_loc.lng,new_home_loc.alt,copter.ahrs.get_home().lat);
+        }
+    }
+    else
+    {
+        gcs().send_text(MAV_SEVERITY_INFO,"openmv set home error diff: %ld ",abs(new_home_loc.lat - copter.ahrs.get_home().lat));
+    }
     gcs().send_text(MAV_SEVERITY_INFO,"openmv max time %ld",ctr_timer);
     return true;
 }
@@ -120,12 +138,13 @@ void ModeOpenmv::run()
     //static int mv_check_v_time = 0;
     int16_t target_body_frame_x=0;
     int16_t target_body_frame_y=0;
-    Vector3f vef;
-    Vector3f veh;
+    //Vector3f vef;
+    ///Vector3f veh;
     float pos_d_h;
     static int16_t max_x=100;
     static int16_t max_y=100;
-    static int16_t max_speed=50;
+    static int16_t max_speed=100;
+    static u_int16_t mv_time_ID7 = 10;
     // copter.serial_concentrator.openmv_data[6].active=1;
     // copter.serial_concentrator.openmv_data[6].r =80;
     // copter.serial_concentrator.openmv_data[6].ipx_x_d = 10000;
@@ -145,11 +164,12 @@ void ModeOpenmv::run()
             //gcs().send_text(MAV_SEVERITY_INFO,"openmv ctr timer out");
             ctr_timer=1;
             target_climb_rate_mv=100;
-             if(copter.ahrs_view->get_relative_position_NED_home(veh))
+             //if(copter.ahrs_view->get_relative_position_NED_home(veh))
+             copter.ahrs.get_relative_position_D_home(pos_d_h);
             {
                 if(ctr_count)
                 {
-                    if(abs(veh.z)>12)
+                    if(abs(pos_d_h)>12)
                     {
                         max_mv_time_x = 0;
                         max_mv_time_Y = 0;
@@ -163,22 +183,36 @@ void ModeOpenmv::run()
                 }
                 else
                 {
-                    if(abs(veh.z)>40)
+                    if(abs(pos_d_h)>40)
                     {
                         gcs().send_text(MAV_SEVERITY_INFO,"openmv ctr timer out");
                         target_climb_rate_mv=0;
-                        Location new_home_loc;
-                        new_home_loc.lat=g2.openmv_lat;
-                        new_home_loc.lng=g2.openmv_lng;
-                        new_home_loc.alt=g2.openmv_alt*100;//cm
-                        if(new_home_loc.lat !=0 && new_home_loc.lng!=0 && new_home_loc.alt !=0)
+                        if(!set_home_flag)
                         {
-                            if(copter.set_home(new_home_loc, false))
+                            Location new_home_loc;
+                            new_home_loc.lat=g2.openmv_lat;
+                            new_home_loc.lng=g2.openmv_lng;
+                            new_home_loc.alt=AP::ahrs().get_home().alt;//g2.openmv_alt*100;//cm
+                            
+                            if(new_home_loc.lat !=0 && new_home_loc.lng!=0 && new_home_loc.alt !=0 && abs(new_home_loc.lat - copter.ahrs.get_home().lat) <=1000000)
                             {
-                                gcs().send_text(MAV_SEVERITY_INFO,"openmv set home lat: %ld lng: %ld,alt:%ld",new_home_loc.lat,new_home_loc.lng,new_home_loc.alt);
-                                set_mode(Mode::Number::RTL, ModeReason::AVOIDANCE);
+                                if(copter.set_home(new_home_loc, false))
+                                {
+                                    set_home_flag = true;
+                                    gcs().send_text(MAV_SEVERITY_INFO,"openmv reset home lat: %ld lng: %ld,alt:%ld",new_home_loc.lat,new_home_loc.lng,new_home_loc.alt);
+                                    
+                                }
+                            }
+                            else
+                            {
+                                gcs().send_text(MAV_SEVERITY_INFO,"openmv reset home error diff: %ld ",abs(new_home_loc.lat - copter.ahrs.get_home().lat));
                             }
                         }
+                        if(set_home_flag)
+                        {
+                            set_mode(Mode::Number::RTL, ModeReason::AVOIDANCE);
+                        }
+                        
                         ctr_timer = g2.openmv_max_time*500;
                         ctr_count = g2.openmv_max_count;
                     }
@@ -192,6 +226,7 @@ void ModeOpenmv::run()
             if(copter.serial_concentrator.openmv_data[4].active)
             {
                 //mv_mid_flag = true;
+                mv_time_ID7 = 0;
                 max_speed=20;
                 mv_time = 0;
                 target_climb_rate_mv=0;
@@ -336,7 +371,8 @@ void ModeOpenmv::run()
                     // }
                     //if(copter.ahrs_view->get_relative_gps_D_home(pos_d_h))
                    // copter.ahrs.get_relative_gps_D_home(pos_d_h);
-                    AP::ahrs().get_relative_position_D_home(pos_d_h);
+                    //AP::ahrs().get_relative_position_D_home(pos_d_h);
+                    copter.ahrs.get_relative_position_D_home(pos_d_h);
                     {
                         //if(abs(pos_d_h)<0.8)
                         if(pos_d_h>=-0.8)
@@ -356,7 +392,8 @@ void ModeOpenmv::run()
                                     max_speed=100;
                                     ctr_timer = g2.openmv_max_time*500;
                                     ctr_count = g2.openmv_max_count;
-                                    set_mode(Mode::Number::LAND, ModeReason::AVOIDANCE);
+                                    start_land_flag = true;
+                                    //set_mode(Mode::Number::LAND, ModeReason::AVOIDANCE);
                                     gcs().send_text(MAV_SEVERITY_INFO,"*************pos land*********");
                                 }
                                 
@@ -401,6 +438,11 @@ void ModeOpenmv::run()
             else if(copter.serial_concentrator.openmv_data[6].active)
             {
                 //mv_mid_flag = true;
+                mv_time_ID7++;
+                if(mv_time_ID7 >=10)
+                {
+                    max_speed = 100;
+                    mv_time_ID7 =10;
                 mv_time = 0;
                 target_climb_rate_mv=0;
                 target_body_frame_x = copter.serial_concentrator.openmv_data[6].x-OPENMV_MID_X;  // 480*720  往左偏移一点
@@ -518,7 +560,8 @@ void ModeOpenmv::run()
                     // }
                     //if(copter.ahrs_view->get_relative_gps_D_home(pos_d_h))
                     //copter.ahrs.get_relative_gps_D_home(pos_d_h);
-                    AP::ahrs().get_relative_position_D_home(pos_d_h);
+                    //AP::ahrs().get_relative_position_D_home(pos_d_h);
+                    copter.ahrs.get_relative_position_D_home(pos_d_h);
                     {
                         if((pos_d_h)>=-1.3)
                         {
@@ -592,16 +635,17 @@ void ModeOpenmv::run()
                 gcs().send_text(MAV_SEVERITY_INFO,"ID7:x=%d,y=%d,P_d=%.2f,M_v=%d",target_body_frame_x,target_body_frame_y,pos_d_h,max_speed);
                 gcs().send_text(MAV_SEVERITY_INFO,"ID7:t_r=%.1f,p_h=%.1f,t_z=%.1f",target_roll_mv,target_pitch_mv,target_climb_rate_mv);
             }
+            }
             mv_time++;
             if(mv_time==500) //gcs().send_text(MAV_SEVERITY_INFO,"clear mv target=%f",target_climb_rate);
             {
-                AP::ahrs().get_relative_position_D_home(pos_d_h);
+                copter.ahrs.get_relative_position_D_home(pos_d_h);
                 if(pos_d_h>=-3)
                 {
                     target_roll_mv=0;
                     target_pitch_mv=0;
                     target_climb_rate_mv=0;
-                    gcs().send_text(MAV_SEVERITY_INFO,"cl=%f",pos_d_h);
+                    gcs().send_text(MAV_SEVERITY_INFO,"clear mv target");
                 }
             }
             if(mv_time >=5000)
@@ -617,9 +661,12 @@ void ModeOpenmv::run()
                 target_roll_mv=0;
                 target_pitch_mv=0;
                  target_climb_rate_mv=0;
-                if(copter.ahrs_view->get_relative_position_NED_home(veh))
+                //if(copter.ahrs_view->get_relative_position_NED_home(veh))
+                
+                copter.ahrs.get_relative_position_D_home(pos_d_h);
                 {
-                    if(abs(veh.z)<3)
+                    if(mv_time == 5000) gcs().send_text(MAV_SEVERITY_INFO,"reset mv land1:%f",pos_d_h);
+                    if(abs(pos_d_h)<3)
                     {
                         mv_alt_check_time++;
                         if(mv_alt_check_time >1000)
@@ -684,6 +731,12 @@ void ModeOpenmv::run()
                 // if(mv_time %100==0)
                 // gcs().send_text(MAV_SEVERITY_INFO,"mv.z=%f,psh=%f",vef.z,veh.z);
                 
+            }
+            if(start_land_flag)
+            {
+                target_roll_mv=0;
+                target_pitch_mv=0;
+                target_climb_rate_mv = -30;
             }
         }
         

@@ -244,21 +244,21 @@ void Copter::userhook_MediumLoop()
             }
             
         }
-        //if(abs(copter.serial_concentrator.gimbal_st_u.pitch)> 85 && abs(copter.serial_concentrator.gimbal_st_u.pitch) <95)
-        // {
-        //     AP_Mount *mount = AP::mount();
-        //     if (mount != nullptr) {
-        //         mavlink_command_long_t packet;
-        //         packet.command = MAV_CMD_DO_MOUNT_CONTROL;
-        //         packet.param1 = -90;
-        //         packet.param2 = 0;
-        //         packet.param3 = 0;
-        //         packet.param7 = 2;
-        //         mount->handle_command_long(packet);
-        //     }
-        //     //gcs().send_text(MAV_SEVERITY_INFO,"rtl ctl pitch");
+        if(abs(copter.serial_concentrator.gimbal_st_u.pitch)> 85 && abs(copter.serial_concentrator.gimbal_st_u.pitch) <95)
+        {
+            AP_Mount *mount = AP::mount();
+            if (mount != nullptr) {
+                mavlink_command_long_t packet;
+                packet.command = MAV_CMD_DO_MOUNT_CONTROL;
+                packet.param1 = -90;
+                packet.param2 = 0;
+                packet.param3 = 0;
+                packet.param7 = 2;
+                mount->handle_command_long(packet);
+            }
+            //gcs().send_text(MAV_SEVERITY_INFO,"rtl ctl pitch");
             
-        // }
+        }
         //have_move_flag=true;
     }
     if(get_mode() == 5)
@@ -270,7 +270,7 @@ void Copter::userhook_MediumLoop()
     {
         have_move_flag=true;
     }
-    if(get_mode() == 3 )//|| get_mode() == 9 //不能添加land，最后下降是land
+    if(get_mode() == 3 || get_mode() == 9) //不能添加land，最后下降是land
     {
         if(g2.openmv_max_time && have_move_flag)
         {

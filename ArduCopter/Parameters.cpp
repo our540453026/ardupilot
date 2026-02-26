@@ -1228,7 +1228,9 @@ const AP_Param::GroupInfo ParametersG2::var_info3[] = {
     AP_GROUPINFO("MV_TIME_S", 4, ParametersG2, openmv_max_time, 120),
     AP_GROUPINFO("MV_COUNT", 5, ParametersG2, openmv_max_count, 3),
     AP_GROUPINFO("MV_SAFE", 6, ParametersG2, openmv_safe, 0),
-
+    AP_GROUPINFO("UAV_MODE", 7, ParametersG2, uav_mode, 0),
+    AP_GROUPINFO("UAV_REGIST NAME", 8, ParametersG2, uav_regist_name, 0),
+     AP_GROUPINFO("UAV_SERIAL NUM", 9, ParametersG2, uav_serial_num, 0),
     // ID 62 is reserved for the AP_SUBGROUPEXTENSION
 
     AP_GROUPEND

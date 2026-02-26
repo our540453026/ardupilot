@@ -691,7 +691,12 @@ public:
     AP_Float openmv_alt;
     AP_Int16 openmv_max_time;
     AP_Int16 openmv_max_count;
+    AP_Int16 uav_mode;
+    AP_Int32 uav_serial_num;
+    AP_Int8 uav_regist_name;
     AP_Int8 openmv_safe;
+    
+
 #if HAL_WITH_ESC_TELEM && FRAME_CONFIG != HELI_FRAME
     AP_Int16 takeoff_rpm_min;
 #endif
